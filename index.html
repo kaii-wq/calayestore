@@ -11,50 +11,47 @@
 :root{
   box-sizing:border-box;
   --font:"Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-  --bg1:#faf6fd;
-  --card:rgba(255, 255, 255, 0.88);
-  --card-border:rgba(139, 92, 246, 0.15);
+  --bg1:#f8f5fc;
+  --card:#ffffff;
+  --card-border:rgba(139, 92, 246, 0.12);
   --ink:#2b1c38;
   --mute:#867597;
   --acc:#8b5cf6;
-  --acc-glow:rgba(139, 92, 246, 0.3);
+  --acc-glow:rgba(139,92,246,0.25);
   --grad-btn:linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
   --line:#ebdcf5;
   --ok:#10b981;
   --bad:#ef4444;
-  --shadow:0 12px 32px rgba(139, 92, 246, 0.1);
+  --shadow:0 10px 30px rgba(139, 92, 246, 0.08);
 }
 *{box-sizing:border-box}
 body{
   margin:0; font-family:var(--font); color:var(--ink); background:var(--bg1);
-  background-image:radial-gradient(at 0% 0%, rgba(139,92,246,0.12) 0px, transparent 50%),
-                   radial-gradient(at 100% 100%, rgba(236,72,153,0.1) 0px, transparent 50%);
-  background-attachment:fixed; min-height:100vh;
+  min-height:100vh; padding-bottom: 90px;
 }
-.wrap{max-width:760px;margin:0 auto;padding:16px 16px 90px}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
 header{
   display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px;
-  padding:14px 18px;background:var(--card);backdrop-filter:blur(16px);
+  padding:14px 20px;background:var(--card);
   border:1px solid var(--card-border);border-radius:20px;box-shadow:var(--shadow);
 }
 h1{font-size:18px;margin:0;font-weight:800;color:var(--acc)}
-h1 small{display:block;font-size:11px;color:var(--mute);font-weight:500}
-nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+nav{display:flex;gap:6px;align-items:center}
 button,input,select{font:inherit;color:inherit}
 .btn{
-  border:1px solid var(--line);background:rgba(255,255,255,0.6);padding:8px 14px;
+  border:1px solid var(--line);background:#fff;padding:8px 16px;
   border-radius:99px;cursor:pointer;font-weight:600;font-size:12px;color:var(--ink);transition:all .2s;
 }
 .btn.on,.btn.pri{background:var(--grad-btn);color:#fff;border:none;box-shadow:0 4px 15px var(--acc-glow)}
-.btn.sm{padding:5px 10px;font-size:11px}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
+.btn.sm{padding:6px 12px;font-size:11px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 16px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:480px){.grid{grid-template-columns:1fr}}
 .card{
-  background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--card-border);
+  background:var(--card);border:1px solid var(--card-border);
   border-radius:20px;padding:16px;box-shadow:var(--shadow);
 }
-.card h3{margin:0 0 2px;font-size:16px;font-weight:700}
+.card h3{margin:0 0 2px;font-size:15px;font-weight:700}
 .mute{color:var(--mute);font-size:12px}
 .vs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .v{
@@ -63,22 +60,38 @@ button,input,select{font:inherit;color:inherit}
 }
 .v.on{background:var(--acc);color:#fff;border-color:transparent}
 .v:disabled{opacity:.4;cursor:not-allowed}
-.price{font-size:17px;font-weight:800;color:var(--acc)}
+.price{font-size:16px;font-weight:800;color:var(--acc)}
 .row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-input,select{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 12px;width:100%;outline:none}
+input,select{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;width:100%;outline:none}
 input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 .badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;text-transform:uppercase}
 .ok{background:rgba(16,185,129,0.15);color:var(--ok)}
 .bad{background:rgba(239,68,68,0.15);color:var(--bad)}
+
 .toast{
-  position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;
+  position:fixed;left:50%;bottom:95px;transform:translateX(-50%);background:var(--ink);color:#fff;
   padding:10px 20px;border-radius:99px;font-size:12px;font-weight:600;z-index:99;box-shadow:0 5px 20px rgba(0,0,0,0.2);
 }
 .qris-box{text-align:center;background:#fff;padding:16px;border-radius:16px;border:1px solid var(--line);margin-top:12px;}
-.qris-box img{width:200px;height:200px;object-fit:contain;margin:8px auto;display:block;border-radius:8px;}
-.timer-badge{font-size:15px;font-weight:800;color:var(--bad);background:rgba(239,68,68,0.1);padding:6px 12px;border-radius:12px;display:inline-block;margin:6px 0;}
-.success-icon{font-size:54px;margin-bottom:8px;animation:bounce .5s infinite alternate;}
-@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+.qris-box img{width:220px;height:220px;object-fit:contain;margin:8px auto;display:block;border-radius:8px;}
+.success-icon{font-size:54px;margin-bottom:8px;}
+
+/* Floating Cart Bubble di Bawah */
+.cart-bubble{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:var(--ink); color:#fff; padding:12px 20px; border-radius:99px;
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
+  width:90%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.2);
+  z-index:98; cursor:pointer; font-weight:700; font-size:13px;
+  animation: slideUp .3s ease;
+}
+@keyframes slideUp{from{transform:translate(-50%, 50px);opacity:0}to{transform:translate(-50%, 0);opacity:1}}
+
+.announcement-banner{
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  color: #fff; padding: 12px 18px; border-radius: 16px; font-size: 13px; font-weight: 600;
+  margin-bottom: 16px; box-shadow: 0 4px 15px var(--acc-glow); display: flex; align-items: center; gap: 10px;
+}
 .sp{margin-top:12px}
 .prod-img{width:100%;height:130px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:#eee;}
 </style>
@@ -88,13 +101,19 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
 <header>
   <div>
     <h1 id="sn">Calaye Store</h1>
-    <small>Kota Yogyakarta • Real-Time Cloud Store</small>
   </div>
   <nav id="nav"></nav>
 </header>
+
+<!-- Banner Pengumuman dari Admin -->
+<div id="banner-container"></div>
+
 <main id="app"></main>
 </div>
 <div id="toast"></div>
+
+<!-- Floating Bubble Keranjang di Bawah -->
+<div id="floating-cart"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -136,13 +155,12 @@ function convertQRISDynamic(qris, amount) {
 
 let DB = {
   settings: { name: 'Calaye Store', wa: '6281234567890' },
+  announcement: { text: '', active: false },
   coupons: [],
   products: []
 };
 
 let view = 'shop', cat = 'Semua', searchQuery = '', cart = {}, sel = {}, last = null, coupon = '';
-let paymentTimer = null;
-let timeLeft = 120;
 let unsubscribeOrderStatus = null;
 
 const $ = id => document.getElementById(id);
@@ -159,7 +177,7 @@ function toast(m) {
   }
 }
 
-// Dengarkan perubahan konfigurasi toko secara real-time dari Firebase
+// Sinkronisasi data real-time dari Firebase
 onSnapshot(doc(db, "store", "config"), (docSnap) => {
   if (docSnap.exists()) {
     DB = docSnap.data();
@@ -168,10 +186,7 @@ onSnapshot(doc(db, "store", "config"), (docSnap) => {
 });
 
 function go(v) { 
-  if (v !== 'cart') { 
-    clearInterval(paymentTimer); 
-    if (unsubscribeOrderStatus) unsubscribeOrderStatus();
-  }
+  if (v !== 'cart' && unsubscribeOrderStatus) unsubscribeOrderStatus();
   view = v; last = null; render(); 
 }
 window.go = go;
@@ -179,6 +194,15 @@ window.go = go;
 function render() {
   document.title = nm();
   if ($('sn')) $('sn').textContent = nm();
+  
+  // Render Banner Pengumuman
+  const bannerEl = $('banner-container');
+  if (DB.announcement && DB.announcement.active && DB.announcement.text) {
+    bannerEl.innerHTML = `<div class="announcement-banner">📢 <span>${esc(DB.announcement.text)}</span></div>`;
+  } else {
+    bannerEl.innerHTML = '';
+  }
+
   if ($('nav')) {
     $('nav').innerHTML = `
       <button class="btn sm ${view === 'shop' ? 'on' : ''}" onclick="window.go('shop')">Katalog</button>
@@ -190,6 +214,28 @@ function render() {
   if (app) {
     app.innerHTML = view === 'shop' ? shop() : cartV();
   }
+
+  renderFloatingCart();
+}
+
+function renderFloatingCart() {
+  const floating = $('floating-cart');
+  const count = cartN();
+  if (count > 0 && view === 'shop') {
+    let subtotal = 0;
+    Object.keys(cart).forEach(i => { const f = findVar(i); if(f) subtotal += f.v.price * cart[i]; });
+    
+    floating.innerHTML = `
+      <div class="cart-bubble" onclick="window.go('cart')">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="background:#fff; color:var(--ink); padding:4px 10px; border-radius:99px; font-size:12px;">🛒 ${count} Item</span>
+          <span>Buka Keranjang</span>
+        </div>
+        <span>${rp(subtotal)} →</span>
+      </div>`;
+  } else {
+    floating.innerHTML = '';
+  }
 }
 
 function shop() {
@@ -198,7 +244,7 @@ function shop() {
 
   return `
     <div style="margin-bottom:12px;">
-      <input type="text" placeholder="🔍 Cari aplikasi..." value="${esc(searchQuery)}" oninput="window.setSearch(this.value)">
+      <input type="text" placeholder="🔍 Cari aplikasi premium..." value="${esc(searchQuery)}" oninput="window.setSearch(this.value)">
     </div>
     <div class="chips">
       ${cats.map(c => `<button class="btn sm ${c === cat ? 'on' : ''}" onclick="window.setCat('${esc(c)}')">${esc(c)}</button>`).join('')}
@@ -221,7 +267,7 @@ function shop() {
               ${variants.map(v => `<button class="v ${cur && v.id === cur.id ? 'on' : ''}" ${(v.stock || 0) < 1 ? 'disabled' : ''} onclick="window.setSel('${p.id}','${v.id}')">${esc(v.label)}</button>`).join('')}
             </div>
             ${cur ? `
-              <div class="row">
+              <div class="row" style="margin-top:8px;">
                 <div>
                   <div class="price">${rp(cur.price)}</div>
                   <div class="mute">Stok: ${cur.stock || 0}</div>
@@ -231,7 +277,7 @@ function shop() {
             ` : ''}
           </div>`;
       }).join('') : '<div class="card" style="grid-column:span 2;text-align:center;color:var(--mute)">Produk tidak ditemukan</div>'}
-    </div>`;
+    `;
 }
 
 function findVar(vid) {
@@ -267,33 +313,32 @@ function cartV() {
   if (last) {
     const isSuccess = last.status === 'SUCCESS' || last.status === 'Selesai';
     return `
-      <div class="card" style="text-align:center;padding:28px 20px">
+      <div class="card" style="text-align:center;padding:32px 20px">
         ${isSuccess ? `
-          <div class="success-icon">✅</div>
+          <div class="success-icon">🎉</div>
           <h2 style="color:var(--ok); margin-bottom:6px">Pembayaran Berhasil!</h2>
-          <p class="mute">Admin telah mengonfirmasi pembayaran Anda. Pesanan sedang diproses.</p>
-          <div style="background:rgba(16,185,129,0.08); border:1px solid var(--ok); padding:14px; border-radius:14px; margin:14px 0;">
+          <p class="mute">Pesanan Anda telah dikonfirmasi oleh Admin.</p>
+          <div style="background:rgba(16,185,129,0.08); border:1px solid var(--ok); padding:14px; border-radius:14px; margin:16px 0;">
             <b>Kode Order: ${last.code}</b><br>
-            <span class="badge ok" style="margin-top:6px; display:inline-block;">STATUS: LUNAS / SELESAI</span>
+            <span class="badge ok" style="margin-top:6px; display:inline-block;">STATUS: LUNAS</span>
           </div>
         ` : `
-          <h3 style="color:var(--acc); margin-bottom:4px">Menunggu Pembayaran QRIS ⏳</h3>
-          <p class="mute">Selesaikan pembayaran sebelum waktu habis.</p>
-          <div class="timer-badge" id="timer-display">Waktu tersisa: 02:00</div>
-          
-          <div style="background:#fff; border:1px solid var(--line); padding:14px; border-radius:14px; margin:12px 0;">
+          <div class="success-icon">⏳</div>
+          <h3 style="color:var(--acc); margin-bottom:4px">Menunggu Konfirmasi Admin</h3>
+          <p class="mute">Silakan kirim bukti transfer/pembayaran QRIS ke WhatsApp admin.</p>
+          <div style="background:#f8f5fc; border:1px solid var(--line); padding:14px; border-radius:14px; margin:16px 0;">
             <b>Kode Order: ${last.code}</b><br>
-            <span class="badge bad" style="margin-top:6px; display:inline-block;">STATUS: MENUNGGU KONFIRMASI ADMIN</span>
+            <span class="badge bad" style="margin-top:6px; display:inline-block;">STATUS: MENUNGGU PEMBAYARAN</span>
           </div>
         `}
         
-        <a class="btn pri sp" style="display:inline-block;text-decoration:none;margin-top:8px" href="${last.url}" target="_blank" rel="noopener">Kirim Bukti ke WhatsApp 🚀</a>
-        <div style="margin-top:16px"><button class="btn sm" onclick="window.go('shop')">← Belanja Lagi</button></div>
+        <a class="btn pri" style="display:block;text-decoration:none;text-align:center;padding:12px;margin-top:12px;" href="${last.url}" target="_blank" rel="noopener">Kirim Bukti ke WhatsApp 🚀</a>
+        <div style="margin-top:16px"><button class="btn sm" onclick="window.go('shop')">← Kembali ke Katalog</button></div>
       </div>`;
   }
 
   const ids = Object.keys(cart);
-  if (!ids.length) return '<div class="card" style="text-align:center;padding:30px"><p class="mute">Keranjang belanjaan kamu masih kosong.</p><button class="btn pri sm sp" onclick="window.go(\'shop\')">Lihat Katalog</button></div>';
+  if (!ids.length) return '<div class="card" style="text-align:center;padding:40px"><p class="mute">Keranjang belanjaan kamu masih kosong.</p><button class="btn pri sm sp" onclick="window.go(\'shop\')">Lihat Katalog</button></div>';
 
   let subtotal = 0;
   ids.forEach(i => { const f = findVar(i); if (f) subtotal += f.v.price * cart[i]; });
@@ -333,73 +378,43 @@ function cartV() {
       <div class="row sp" style="font-size:16px;"><b>Total Bayar</b><span class="price">${rp(total)}</span></div>
 
       <div class="sp row" style="gap:6px">
-        <input style="flex:1" placeholder="Kode Kupon (Contoh: CALAYE20)" value="${esc(coupon)}" oninput="window.setCoupon(this.value)">
-        <button class="btn sm" onclick="window.render()">Pakai Kupon</button>
+        <input style="flex:1" placeholder="Kode Kupon (Opsional)" value="${esc(coupon)}" oninput="window.setCoupon(this.value)">
+        <button class="btn sm" onclick="window.render()">Pakai</button>
       </div>
 
-      <div class="sp"><input id="cn" placeholder="Nama Lengkap Kamu"></div>
+      <div class="sp"><input id="cn" placeholder="Nama Lengkap Anda"></div>
       <div class="sp"><input id="cw" inputmode="tel" placeholder="Nomor WhatsApp (Contoh: 08123456789)"></div>
       
-      <div class="sp">
-        <label class="mute" style="display:block;margin-bottom:6px">Pilih Metode Pembayaran:</label>
-        <select id="cpay">
-          <option value="QRIS">⚡ QRIS Dinamis (Nominal Otomatis ${rp(total)})</option>
-          <option value="Transfer BCA">🏦 Transfer Bank BCA</option>
-        </select>
-      </div>
-
+      <!-- Fokus Pembayaran Barcode QRIS Saja -->
       <div class="qris-box">
-        <b style="font-size:14px; color:var(--acc);">QRIS Otomatis Terisi Nominal</b>
+        <b style="font-size:14px; color:var(--acc);">Scan Barcode QRIS Otomatis</b>
         <div style="font-size:18px; font-weight:800; color:var(--ok); margin-top:4px;">${rp(total)}</div>
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(dynamicQrisStr)}" alt="Barcode QRIS">
-        <div style="font-size:11px; color:var(--mute); margin-top:6px;">Scan barcode di atas menggunakan DANA, GoPay, OVO, ShopeePay, atau m-Banking.</div>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(dynamicQrisStr)}" alt="QRIS Barcode">
+        <div style="font-size:11px; color:var(--mute); margin-top:6px;">Mendukung DANA, GoPay, OVO, ShopeePay, & m-Banking.</div>
       </div>
 
-      <button class="btn pri sp" style="width:100%; padding: 12px;" onclick="window.checkout()">Konfirmasi & Bayar via WhatsApp 🚀</button>
+      <button class="btn pri sp" style="width:100%; padding: 14px;" onclick="window.checkout()">Konfirmasi Pesanan & Bayar 🚀</button>
     </div>`;
 }
 
-function startTimer(docId) {
-  clearInterval(paymentTimer);
-  timeLeft = 120;
-  
+function startRealtimeOrder(docId) {
   if (unsubscribeOrderStatus) unsubscribeOrderStatus();
   unsubscribeOrderStatus = onSnapshot(doc(db, "orders", docId), (snapshot) => {
     if (snapshot.exists()) {
       const data = snapshot.data();
       if (data.status === 'SUCCESS' || data.status === 'Selesai') {
         if (last) last.status = 'SUCCESS';
-        clearInterval(paymentTimer);
         render();
       }
     }
   });
-
-  paymentTimer = setInterval(() => {
-    if (view !== 'cart' || !last) {
-      clearInterval(paymentTimer);
-      return;
-    }
-    
-    timeLeft--;
-    const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-    const s = String(timeLeft % 60).padStart(2, '0');
-    const disp = $('timer-display');
-    if (disp) disp.textContent = `Waktu tersisa: ${m}:${s}`;
-
-    if (timeLeft <= 0) {
-      clearInterval(paymentTimer);
-      toast('Waktu pembayaran habis!');
-    }
-  }, 1000);
 }
 
 async function checkout() {
   const name = $('cn').value.trim();
   const wa = $('cw').value.replace(/\D/g, '');
-  const paymentMethod = $('cpay').value;
 
-  if (!name || wa.length < 9) { toast('Isi nama dan nomor WA yang valid!'); return; }
+  if (!name || wa.length < 9) { toast('Lengkapi Nama dan Nomor WhatsApp!'); return; }
   
   const ids = Object.keys(cart);
   const d = new Date();
@@ -418,7 +433,7 @@ async function checkout() {
   const total = Math.max(0, subtotal - discount);
 
   const targetWA = (DB.settings && DB.settings.wa) ? DB.settings.wa : '6281234567890';
-  const text = `Halo ${nm()}, saya sudah memesan:\n\nKode Order: *${code}*\nNama: ${name}\nWA: ${wa}\n\nRincian Pesanan:\n` + items.map((x, n) => `${n + 1}. ${x.name} (${x.label}) x${x.qty} = ${rp(x.price * x.qty)}`).join('\n') + `\n\n*Total Bayar: ${rp(total)}*\nMetode Pembayaran: *${paymentMethod}*\n\n(Saya akan segera konfirmasi pembayaran). Terima kasih!`;
+  const text = `Halo ${nm()}, saya ingin memesan:\n\nKode Order: *${code}*\nNama: ${name}\nWA: ${wa}\n\nRincian Pesanan:\n` + items.map((x, n) => `${n + 1}. ${x.name} (${x.label}) x${x.qty} = ${rp(x.price * x.qty)}`).join('\n') + `\n\n*Total Bayar: ${rp(total)}*\nMetode: *QRIS Barcode*\n\n(Berikut saya lampirkan bukti pembayaran). Terima kasih!`;
   const url = 'https://wa.me/' + targetWA + '?text=' + encodeURIComponent(text);
 
   try {
@@ -443,15 +458,14 @@ async function checkout() {
     cart = {}; coupon = ''; 
     last = { code, url, status: 'PENDING', docId: docRef.id }; 
     render(); 
-    startTimer(docRef.id); 
+    startRealtimeOrder(docRef.id); 
     window.open(url, '_blank');
 
   } catch (err) {
-    alert('Gagal mengirim pesanan ke cloud: ' + err.message);
+    alert('Gagal mengirim pesanan: ' + err.message);
   }
 }
 
-// Bind fungsi ke window agar dapat dipanggil elemen HTML
 window.add = add;
 window.qty = qty;
 window.checkout = checkout;
