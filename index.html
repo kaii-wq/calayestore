@@ -7,8 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Pustaka QRCode.js untuk memastikan barcode pasti tampil -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
   box-sizing:border-box;
@@ -26,79 +24,141 @@
   --bad:#ef4444;
   --shadow:0 10px 30px rgba(139, 92, 246, 0.08);
 }
+[data-theme="dark"]{
+  --bg1:#0f071a;
+  --card:#1a102f;
+  --card-border:rgba(139, 92, 246, 0.25);
+  --ink:#f3e8ff;
+  --mute:#a78bfa;
+  --line:#2e1f4a;
+}
 *{box-sizing:border-box}
 body{
   margin:0; font-family:var(--font); color:var(--ink); background:var(--bg1);
-  min-height:100vh; padding-bottom: 90px;
+  min-height:100vh; padding-bottom: 90px; transition: background .4s cubic-bezier(0.4, 0, 0.2, 1), color .4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .wrap{max-width:760px;margin:0 auto;padding:16px}
 header{
   display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px;
   padding:14px 20px;background:var(--card);
   border:1px solid var(--card-border);border-radius:20px;box-shadow:var(--shadow);
+  animation: slideDown .5s ease;
 }
 h1{font-size:18px;margin:0;font-weight:800;color:var(--acc)}
 nav{display:flex;gap:6px;align-items:center}
 button,input,select{font:inherit;color:inherit}
+
 .btn{
-  border:1px solid var(--line);background:#fff;padding:8px 16px;
-  border-radius:99px;cursor:pointer;font-weight:600;font-size:12px;color:var(--ink);transition:all .2s;
+  border:1px solid var(--line);background:var(--card);padding:8px 16px;
+  border-radius:99px;cursor:pointer;font-weight:600;font-size:12px;color:var(--ink);
+  transition:all .25s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(139,92,246,0.15);}
+.btn:active{transform:scale(0.96);}
 .btn.on,.btn.pri{background:var(--grad-btn);color:#fff;border:none;box-shadow:0 4px 15px var(--acc-glow)}
 .btn.sm{padding:6px 12px;font-size:11px}
+
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 16px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:480px){.grid{grid-template-columns:1fr}}
+
 .card{
   background:var(--card);border:1px solid var(--card-border);
   border-radius:20px;padding:16px;box-shadow:var(--shadow);
+  transition:transform .3s ease, box-shadow .3s ease;
+  animation: fadeUp .5s ease forwards;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 15px 35px rgba(139,92,246,0.14);
 }
 .card h3{margin:0 0 2px;font-size:15px;font-weight:700}
 .mute{color:var(--mute);font-size:12px}
+.desc{color:var(--mute);font-size:11px;margin:6px 0 10px;line-height:1.4;}
 .vs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+
 .v{
   border:1px solid var(--line);border-radius:10px;padding:5px 10px;background:transparent;
-  cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;
+  cursor:pointer;font-size:12px;font-weight:600;transition:all .2s ease;color:var(--ink);
 }
-.v.on{background:var(--acc);color:#fff;border-color:transparent}
+.v:hover{border-color:var(--acc);}
+.v.on{background:var(--acc);color:#fff;border-color:transparent;box-shadow:0 2px 10px var(--acc-glow)}
 .v:disabled{opacity:.4;cursor:not-allowed}
+
 .price{font-size:16px;font-weight:800;color:var(--acc)}
 .row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-input,select{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;width:100%;outline:none}
+
+input,select{
+  border:1px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:12px;padding:10px 14px;width:100%;outline:none;
+  transition:all .25s ease;
+}
 input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 .badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;text-transform:uppercase}
 .ok{background:rgba(16,185,129,0.15);color:var(--ok)}
 .bad{background:rgba(239,68,68,0.15);color:var(--bad)}
 
+/* Toast Animation */
 .toast{
-  position:fixed;left:50%;bottom:95px;transform:translateX(-50%);background:var(--ink);color:#fff;
+  position:fixed;left:50%;bottom:95px;transform:translateX(-50%);background:var(--ink);color:var(--bg1);
   padding:10px 20px;border-radius:99px;font-size:12px;font-weight:600;z-index:99;box-shadow:0 5px 20px rgba(0,0,0,0.2);
+  animation: popUp .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.qris-box{text-align:center;background:#fff;padding:16px;border-radius:16px;border:1px solid var(--line);margin-top:12px;}
-.qris-render{display:flex;justify-content:center;margin:10px auto;}
-.success-icon{font-size:54px;margin-bottom:8px;}
 
-/* Floating Cart Bubble di Bawah */
+.success-icon{
+  font-size:54px;margin-bottom:8px;
+  animation: bounce 1.2s infinite alternate;
+}
+
+/* Payment Method Options */
+.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+.pay-opt{
+  border:2px solid var(--line);border-radius:12px;padding:10px;text-align:center;cursor:pointer;
+  font-weight:700;font-size:12px;background:var(--card);color:var(--ink);
+  transition:all .25s ease;
+}
+.pay-opt:hover{border-color:var(--acc);transform:scale(1.02);}
+.pay-opt.active{border-color:var(--acc);background:rgba(139,92,246,0.12);color:var(--acc);box-shadow:0 4px 12px var(--acc-glow)}
+
+/* Floating Cart Bubble Animation */
 .cart-bubble{
   position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-  background:var(--ink); color:#fff; padding:12px 20px; border-radius:99px;
+  background:var(--acc); color:#fff; padding:12px 20px; border-radius:99px;
   display:flex; align-items:center; justify-content:space-between; gap:24px;
-  width:90%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.2);
+  width:90%; max-width:500px; box-shadow:0 10px 30px rgba(139,92,246,0.4);
   z-index:98; cursor:pointer; font-weight:700; font-size:13px;
-  animation: slideUp .3s ease;
+  animation: floatIn .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), pulse 2.5s infinite ease-in-out;
+  transition:transform .2s ease;
 }
-@keyframes slideUp{from{transform:translate(-50%, 50px);opacity:0}to{transform:translate(-50%, 0);opacity:1}}
+.cart-bubble:hover{transform:translateX(-50%) scale(1.03);}
 
 .announcement-banner{
-  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
   color: #fff; padding: 12px 18px; border-radius: 16px; font-size: 13px; font-weight: 600;
   margin-bottom: 16px; box-shadow: 0 4px 15px var(--acc-glow); display: flex; align-items: center; gap: 10px;
+  animation: fadeIn .6s ease;
 }
 .sp{margin-top:12px}
-.prod-img{width:100%;height:130px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:#eee;}
+.prod-img{
+  width:100%;height:130px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:#eee;
+  transition:transform .3s ease;
+}
+.card:hover .prod-img{transform:scale(1.02);}
+
+/* Keyframe Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes floatIn{from{opacity:0;transform:translate(-50%, 40px)}to{opacity:1;transform:translate(-50%, 0)}}
+@keyframes popUp{from{opacity:0;transform:translate(-50%, 20px) scale(0.9)}to{opacity:1;transform:translate(-50%, 0) scale(1)}}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+@keyframes pulse{
+  0%, 100%{box-shadow:0 10px 30px rgba(139,92,246,0.4);}
+  50%{box-shadow:0 10px 40px rgba(139,92,246,0.7);}
+}
 </style>
 </head>
-<body>
+<body data-theme="light">
 <div class="wrap">
 <header>
   <div>
@@ -133,28 +193,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const BASE_QRIS = "00020101021126570011ID.DANA.WWW011893600915395683928802099568392880303UMI51440014ID.CO.QRIS.WWW0215ID10254193879030303UMI5204581353033605802ID5913Calaye Store 6015Kota Yogyakarta6105552726304B6D6";
-
-function convertQRISDynamic(qris, amount) {
-  let base = qris.slice(0, -4);
-  base = base.replace("010211", "010212");
-  const amtStr = amount.toString();
-  const amtTag = "54" + amtStr.length.toString().padStart(2, "0") + amtStr;
-  const idx58 = base.indexOf("5802ID");
-  if (idx58 !== -1) base = base.slice(0, idx58) + amtTag + base.slice(idx58);
-  else base = base + amtTag;
-  
-  let crc = 0xFFFF;
-  for (let i = 0; i < base.length; i++) {
-    crc ^= base.charCodeAt(i) << 8;
-    for (let j = 0; j < 8; j++) {
-      if ((crc & 0x8000) !== 0) crc = (crc << 1) ^ 0x1021;
-      else crc = crc << 1;
-    }
-  }
-  return base + (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, "0");
-}
-
 let DB = {
   settings: { name: 'Calaye Store', wa: '6281234567890' },
   announcement: { text: '', active: false },
@@ -162,7 +200,7 @@ let DB = {
   products: []
 };
 
-let view = 'shop', cat = 'Semua', searchQuery = '', cart = {}, sel = {}, last = null, coupon = '';
+let view = 'shop', cat = 'Semua', searchQuery = '', cart = {}, sel = {}, last = null, coupon = '', selectedPay = 'QRIS';
 let unsubscribeOrderStatus = null;
 
 const $ = id => document.getElementById(id);
@@ -178,6 +216,15 @@ function toast(m) {
     setTimeout(() => t.innerHTML = '', 2200);
   }
 }
+
+// Toggle Dark/Light Mode
+window.toggleTheme = function() {
+  const body = document.body;
+  const current = body.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  body.setAttribute('data-theme', next);
+  toast(next === 'dark' ? '🌙 Dark Mode Aktif' : '☀️ Light Mode Aktif');
+};
 
 // Sinkronisasi data real-time dari Firebase
 onSnapshot(doc(db, "store", "config"), (docSnap) => {
@@ -197,7 +244,6 @@ function render() {
   document.title = nm();
   if ($('sn')) $('sn').textContent = nm();
   
-  // Render Banner Pengumuman
   const bannerEl = $('banner-container');
   if (DB.announcement && DB.announcement.active && DB.announcement.text) {
     bannerEl.innerHTML = `<div class="announcement-banner">📢 <span>${esc(DB.announcement.text)}</span></div>`;
@@ -206,46 +252,20 @@ function render() {
   }
 
   if ($('nav')) {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
     $('nav').innerHTML = `
       <button class="btn sm ${view === 'shop' ? 'on' : ''}" onclick="window.go('shop')">Katalog</button>
       <button class="btn sm ${view === 'cart' ? 'on' : ''}" onclick="window.go('cart')">Keranjang${cartN() ? ' (' + cartN() + ')' : ''}</button>
+      <button class="btn sm" onclick="window.toggleTheme()">${isDark ? '☀️' : '🌙'}</button>
     `;
   }
   
   const app = $('app');
   if (app) {
     app.innerHTML = view === 'shop' ? shop() : cartV();
-    if (view === 'cart' && !last && Object.keys(cart).length > 0) {
-      renderQRCode();
-    }
   }
 
   renderFloatingCart();
-}
-
-function renderQRCode() {
-  const qrisContainer = $('qris-qrcode-box');
-  if (!qrisContainer) return;
-  qrisContainer.innerHTML = ''; // Kosongkan dulu
-  
-  let subtotal = 0;
-  Object.keys(cart).forEach(i => { const f = findVar(i); if (f) subtotal += f.v.price * cart[i]; });
-  let discount = 0;
-  const coupons = DB.coupons || [];
-  const cObj = coupons.find(x => (x.code || '').toUpperCase() === coupon.trim().toUpperCase());
-  if (cObj) discount = cObj.type === 'percent' ? subtotal * (cObj.val / 100) : cObj.val;
-  const total = Math.max(0, subtotal - discount);
-  const dynamicQrisStr = total > 0 ? convertQRISDynamic(BASE_QRIS, total) : BASE_QRIS;
-
-  // Render QR Code secara lokal menggunakan qrcode.js
-  new QRCode(qrisContainer, {
-    text: dynamicQrisStr,
-    width: 220,
-    height: 220,
-    colorDark: "#000000",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.M
-  });
 }
 
 function renderFloatingCart() {
@@ -280,19 +300,21 @@ function shop() {
       ${cats.map(c => `<button class="btn sm ${c === cat ? 'on' : ''}" onclick="window.setCat('${esc(c)}')">${esc(c)}</button>`).join('')}
     </div>
     <div class="grid">
-      ${list.length ? list.map(p => {
+      ${list.length ? list.map((p, index) => {
         const variants = p.variants || [];
         const off = p.status !== 'tersedia' || variants.every(v => (v.stock || 0) < 1);
         const cur = variants.find(v => v.id === sel[p.id]) || variants.find(v => (v.stock || 0) > 0) || variants[0];
+        const delay = (index * 0.08).toFixed(2);
         
         return `
-          <div class="card">
+          <div class="card" style="animation-delay: ${delay}s">
             ${p.img ? `<img src="${esc(p.img)}" class="prod-img" alt="${esc(p.name)}">` : ''}
             <div class="row">
               <h3>${esc(p.name)}</h3>
               <span class="badge ${off ? 'bad' : 'ok'}">${off ? 'Habis' : 'Tersedia'}</span>
             </div>
             <div class="mute">${esc(p.cat)}</div>
+            ${p.desc ? `<div class="desc">${esc(p.desc)}</div>` : '<div class="desc" style="opacity:0.5">Aplikasi premium bergaransi resmi.</div>'}
             <div class="vs">
               ${variants.map(v => `<button class="v ${cur && v.id === cur.id ? 'on' : ''}" ${(v.stock || 0) < 1 ? 'disabled' : ''} onclick="window.setSel('${p.id}','${v.id}')">${esc(v.label)}</button>`).join('')}
             </div>
@@ -339,6 +361,13 @@ function qty(id, d) {
   render();
 }
 
+window.setPay = function(m) {
+  selectedPay = m;
+  document.querySelectorAll('.pay-opt').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('pay-' + m);
+  if(target) target.classList.add('active');
+};
+
 function cartV() {
   if (last) {
     const isSuccess = last.status === 'SUCCESS' || last.status === 'Selesai';
@@ -355,14 +384,14 @@ function cartV() {
         ` : `
           <div class="success-icon">⏳</div>
           <h3 style="color:var(--acc); margin-bottom:4px">Menunggu Konfirmasi Admin</h3>
-          <p class="mute">Silakan kirim bukti pembayaran QRIS ke WhatsApp admin.</p>
-          <div style="background:#f8f5fc; border:1px solid var(--line); padding:14px; border-radius:14px; margin:16px 0;">
+          <p class="mute">Silakan kirim konfirmasi pesanan ke WhatsApp admin.</p>
+          <div style="border:1px solid var(--line); padding:14px; border-radius:14px; margin:16px 0;">
             <b>Kode Order: ${last.code}</b><br>
             <span class="badge bad" style="margin-top:6px; display:inline-block;">STATUS: MENUNGGU PEMBAYARAN</span>
           </div>
         `}
         
-        <a class="btn pri" style="display:block;text-decoration:none;text-align:center;padding:12px;margin-top:12px;" href="${last.url}" target="_blank" rel="noopener">Kirim Bukti ke WhatsApp 🚀</a>
+        <a class="btn pri" style="display:block;text-decoration:none;text-align:center;padding:12px;margin-top:12px;" href="${last.url}" target="_blank" rel="noopener">Kirim Chat ke WhatsApp 🚀</a>
         <div style="margin-top:16px"><button class="btn sm" onclick="window.go('shop')">← Kembali ke Katalog</button></div>
       </div>`;
   }
@@ -414,15 +443,17 @@ function cartV() {
       <div class="sp"><input id="cn" placeholder="Nama Lengkap Anda"></div>
       <div class="sp"><input id="cw" inputmode="tel" placeholder="Nomor WhatsApp (Contoh: 08123456789)"></div>
       
-      <!-- Kotak Barcode QRIS Lokal (Pasti Tampil & Dinamis) -->
-      <div class="qris-box">
-        <b style="font-size:14px; color:var(--acc);">Scan Barcode QRIS Otomatis</b>
-        <div style="font-size:18px; font-weight:800; color:var(--ok); margin-top:4px;">${rp(total)}</div>
-        <div id="qris-qrcode-box" class="qris-render"></div>
-        <div style="font-size:11px; color:var(--mute); margin-top:6px;">Mendukung DANA, GoPay, OVO, ShopeePay, & m-Banking.</div>
+      <!-- Pilihan Metode Pembayaran E-Wallet -->
+      <div class="sp">
+        <label class="mute" style="display:block; margin-bottom:6px; font-weight:700;">Metode Pembayaran:</label>
+        <div class="pay-grid">
+          <div class="pay-opt ${selectedPay === 'QRIS' ? 'active' : ''}" id="pay-QRIS" onclick="window.setPay('QRIS')">⚡ QRIS</div>
+          <div class="pay-opt ${selectedPay === 'DANA' ? 'active' : ''}" id="pay-DANA" onclick="window.setPay('DANA')">💙 DANA</div>
+          <div class="pay-opt ${selectedPay === 'GoPay' ? 'active' : ''}" id="pay-GoPay" onclick="window.setPay('GoPay')">💚 GoPay</div>
+        </div>
       </div>
 
-      <button class="btn pri sp" style="width:100%; padding: 14px;" onclick="window.checkout()">Konfirmasi Pesanan & Bayar 🚀</button>
+      <button class="btn pri sp" style="width:100%; padding: 14px;" onclick="window.checkout()">Pesan & Lanjutkan ke WhatsApp 🚀</button>
     </div>`;
 }
 
@@ -447,6 +478,11 @@ async function checkout() {
   
   const ids = Object.keys(cart);
   const d = new Date();
+  
+  // Format Tanggal: misal "1 okt 26"
+  const months = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agt', 'sep', 'okt', 'nov', 'des'];
+  const dateStr = `${d.getDate()} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+  
   const code = 'CS-' + String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
   
   const items = ids.map(i => {
@@ -461,8 +497,15 @@ async function checkout() {
   if (cObj) discount = cObj.type === 'percent' ? subtotal * (cObj.val / 100) : cObj.val;
   const total = Math.max(0, subtotal - discount);
 
+  const storeName = nm();
   const targetWA = (DB.settings && DB.settings.wa) ? DB.settings.wa : '6281234567890';
-  const text = `Halo ${nm()}, saya ingin memesan:\n\nKode Order: *${code}*\nNama: ${name}\nWA: ${wa}\n\nRincian Pesanan:\n` + items.map((x, n) => `${n + 1}. ${x.name} (${x.label}) x${x.qty} = ${rp(x.price * x.qty)}`).join('\n') + `\n\n*Total Bayar: ${rp(total)}*\nMetode: *QRIS Barcode*\n\n(Berikut saya lampirkan bukti pembayaran). Terima kasih!`;
+  const firstProductName = items.length > 0 ? items[0].name : 'Produk';
+
+  // Format pesan WhatsApp persis seperti permintaan Anda
+  const text = `Hallo\n🍰 *${storeName.toUpperCase()}*\nTanggal ${dateStr} · #${firstProductName}\nKode pesanan: *${code}*\n☎ Nomer wa: ${wa} (${name})\n\n── rincian pemesanan ──\n` + 
+    items.map(x => `› ${x.name} (${x.label})\n${x.qty}× ${rp(x.price)} · ${rp(x.price * x.qty)}`).join('\n') + 
+    `\n─────────────\n📝 TOTAL BAYAR · *${rp(total)}*\n\nPembayaran: ☑ *${selectedPay}*`;
+
   const url = 'https://wa.me/' + targetWA + '?text=' + encodeURIComponent(text);
 
   try {
@@ -478,6 +521,7 @@ async function checkout() {
       total,
       price: total,
       status: 'PENDING',
+      paymentMethod: selectedPay,
       date: d.toLocaleString('id-ID'),
       createdAt: d.toISOString()
     };
