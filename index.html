@@ -11,33 +11,64 @@
 :root{
   box-sizing:border-box;
   --font:"Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-  --bg1:#f8f5fc;
+  --bg1:#f4fbf7;
   --card:#ffffff;
-  --card-border:rgba(139, 92, 246, 0.12);
-  --ink:#2b1c38;
-  --mute:#867597;
-  --acc:#8b5cf6;
-  --acc-glow:rgba(139, 92, 246, 0.25);
-  --grad-btn:linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-  --line:#ebdcf5;
+  --card-border:rgba(16, 185, 129, 0.15);
+  --ink:#1b382b;
+  --mute:#5a7c6b;
+  --acc:#059669; /* Hijau Daun Utama */
+  --acc-glow:rgba(5, 150, 105, 0.2);
+  --grad-btn:linear-gradient(135deg, #059669 0%, #10b981 50%, #f59e0b 100%);
+  --line:#d1fae5;
   --ok:#10b981;
   --bad:#ef4444;
-  --shadow:0 10px 30px rgba(139, 92, 246, 0.08);
+  --shadow:0 10px 30px rgba(5, 150, 105, 0.08);
 }
 [data-theme="dark"]{
-  --bg1:#0f071a;
-  --card:#1a102f;
-  --card-border:rgba(139, 92, 246, 0.25);
-  --ink:#f3e8ff;
-  --mute:#a78bfa;
-  --line:#2e1f4a;
+  --bg1:#071a12;
+  --card:#10261d;
+  --card-border:rgba(16, 185, 129, 0.25);
+  --ink:#e2f8ec;
+  --mute:#6ee7b7;
+  --line:#1c4031;
 }
 *{box-sizing:border-box}
 body{
   margin:0; font-family:var(--font); color:var(--ink); background:var(--bg1);
-  min-height:100vh; padding-bottom: 90px; transition: background .4s cubic-bezier(0.4, 0, 0.2, 1), color .4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height:100vh; padding-bottom: 90px; transition: background .4s ease, color .4s ease;
+  position: relative; overflow-x: hidden;
 }
-.wrap{max-width:760px;margin:0 auto;padding:16px}
+
+/* Hiasan Stiker Daun & Bunga Estetik di Latar Belakang */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  width: 180px; height: 180px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.15;
+  z-index: -1;
+  pointer-events: none;
+}
+/* Stiker Daun Estetik Kiri Atas */
+body::before {
+  top: -20px; left: -20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23059669'%3E%3Cpath d='M12 1.5C5.5 8 5 16 12 22.5C19 16 18.5 8 12 1.5Z' fill='%23f4fbf7'/%3E%3Cpath d='M12 4.5V20' stroke='%23059669' stroke-width='1' stroke-linecap='round'/%3E%3C/svg%3E");
+  animation: floatDeco 6s ease-in-out infinite alternate;
+}
+/* Stiker Bunga Kuning Estetik Kanan Bawah */
+body::after {
+  bottom: 10px; right: -20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'%3E%3Cpath d='M12,2C14.5,6 18,7 22,9.5C18,12 16.5,15.5 14,20C11.5,16 8,14.5 4,12C8,9.5 9.5,6 12,2Z'/%3E%3C/svg%3E");
+  animation: floatDeco 8s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes floatDeco {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(15px) rotate(10deg); }
+}
+
+.wrap{max-width:760px;margin:0 auto;padding:16px; position: relative; z-index: 1;}
 header{
   display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px;
   padding:14px 20px;background:var(--card);
@@ -53,7 +84,7 @@ button,input,select{font:inherit;color:inherit}
   border-radius:99px;cursor:pointer;font-weight:600;font-size:12px;color:var(--ink);
   transition:all .25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(139,92,246,0.15);}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(5,150,105,0.15);border-color:var(--acc);}
 .btn:active{transform:scale(0.96);}
 .btn.on,.btn.pri{background:var(--grad-btn);color:#fff;border:none;box-shadow:0 4px 15px var(--acc-glow)}
 .btn.sm{padding:6px 12px;font-size:11px}
@@ -62,23 +93,17 @@ button,input,select{font:inherit;color:inherit}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:480px){.grid{grid-template-columns:1fr}}
 
-/* Animasi Transisi Halaman (Masuk & Keluar Detail) */
+/* Animasi Transisi Halaman */
 .page-transition {
   animation: pageSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes pageSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Efek Border Gradasi Berputar Saat Hover */
+/* Efek Border Gradasi Hijau-Kuning Berputar Saat Hover */
 .card-glow-wrap {
   position: relative;
   border-radius: 20px;
@@ -89,10 +114,10 @@ button,input,select{font:inherit;color:inherit}
 }
 
 .card-glow-wrap:hover {
-  background: linear-gradient(135deg, #8b5cf6, #ec4899, #8b5cf6);
+  background: linear-gradient(135deg, #059669, #f59e0b, #10b981);
   background-size: 200% 200%;
   animation: borderRotate 3s linear infinite, floatCard 0.3s ease forwards;
-  box-shadow: 0 15px 35px rgba(139,92,246,0.25);
+  box-shadow: 0 15px 35px rgba(5,150,105,0.2);
 }
 
 @keyframes borderRotate {
@@ -115,7 +140,7 @@ button,input,select{font:inherit;color:inherit}
 .card h3{margin:0 0 2px;font-size:15px;font-weight:700}
 .mute{color:var(--mute);font-size:12px}
 
-/* Kotak Detail Deskripsi Penuh di Halaman Detail */
+/* Kotak Detail Deskripsi Penuh */
 .desc-detail {
   color: var(--ink);
   font-size: 13px;
@@ -171,14 +196,14 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
   transition:all .25s ease;
 }
 .pay-opt:hover{border-color:var(--acc);transform:scale(1.02);}
-.pay-opt.active{border-color:var(--acc);background:rgba(139,92,246,0.12);color:var(--acc);box-shadow:0 4px 12px var(--acc-glow)}
+.pay-opt.active{border-color:var(--acc);background:rgba(5,150,105,0.12);color:var(--acc);box-shadow:0 4px 12px var(--acc-glow)}
 
-/* Floating Cart Bubble Animation */
+/* Floating Cart Bubble */
 .cart-bubble{
   position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-  background:var(--acc); color:#fff; padding:12px 20px; border-radius:99px;
+  background:var(--grad-btn); color:#fff; padding:12px 20px; border-radius:99px;
   display:flex; align-items:center; justify-content:space-between; gap:24px;
-  width:90%; max-width:500px; box-shadow:0 10px 30px rgba(139,92,246,0.4);
+  width:90%; max-width:500px; box-shadow:0 10px 30px rgba(5,150,105,0.3);
   z-index:98; cursor:pointer; font-weight:700; font-size:13px;
   animation: floatIn .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), pulse 2.5s infinite ease-in-out;
   transition:transform .2s ease;
@@ -186,7 +211,7 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
 .cart-bubble:hover{transform:translateX(-50%) scale(1.03);}
 
 .announcement-banner{
-  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #f59e0b 100%);
   color: #fff; padding: 12px 18px; border-radius: 16px; font-size: 13px; font-weight: 600;
   margin-bottom: 16px; box-shadow: 0 4px 15px var(--acc-glow); display: flex; align-items: center; gap: 10px;
   animation: fadeIn .6s ease;
@@ -206,16 +231,59 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
 @keyframes popUp{from{opacity:0;transform:translate(-50%, 20px) scale(0.9)}to{opacity:1;transform:translate(-50%, 0) scale(1)}}
 @keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
 @keyframes pulse{
-  0%, 100%{box-shadow:0 10px 30px rgba(139,92,246,0.4);}
-  50%{box-shadow:0 10px 40px rgba(139,92,246,0.7);}
+  0%, 100%{box-shadow:0 10px 30px rgba(5,150,105,0.3);}
+  50%{box-shadow:0 10px 40px rgba(245,158,11,0.4);}
 }
+
+/* ===== Logo Daun Clove ===== */
+#sn{display:flex;align-items:center;gap:8px}
+.clove-logo{flex:none;filter:drop-shadow(0 2px 4px rgba(5,150,105,0.35));animation:swayLeaf 4s ease-in-out infinite alternate;transform-origin:bottom center;}
+@keyframes swayLeaf{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+
+/* ===== Plester Kertas (Washi Tape) Aestetik ===== */
+.washi-tape{
+  position:absolute; top:-12px; left:50%; transform:translateX(-50%) rotate(-4deg);
+  width:96px; height:26px; z-index:3; pointer-events:none; opacity:.9;
+  background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.28) 0 6px, transparent 6px 12px),
+    linear-gradient(135deg, rgba(16,185,129,0.65), rgba(245,158,11,0.6));
+  border-left:2px dashed rgba(255,255,255,0.55);
+  border-right:2px dashed rgba(255,255,255,0.55);
+  box-shadow:0 3px 6px rgba(0,0,0,0.12);
+  border-radius:2px;
+}
+
+/* ===== Kartu Sticky Notes Bergaris ===== */
+:root{
+  --note-bg:#fffdf0;
+  --note-line:rgba(5,150,105,0.14);
+  --note-margin:rgba(239,68,68,0.22);
+}
+[data-theme="dark"]{
+  --note-bg:#152a20;
+  --note-line:rgba(110,231,183,0.14);
+  --note-margin:rgba(245,158,11,0.3);
+}
+.card.sticky{
+  position:relative;
+  background:
+    linear-gradient(90deg, transparent 32px, var(--note-margin) 32px, var(--note-margin) 33px, transparent 33px),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 25px, var(--note-line) 25px, var(--note-line) 26px),
+    var(--note-bg);
+  background-position:0 10px;
+  box-shadow:0 6px 16px rgba(5,150,105,0.10);
+}
+.card.sticky .prod-img{margin-top:16px}
+.grid .card-glow-wrap:nth-child(odd){transform:rotate(-0.7deg)}
+.grid .card-glow-wrap:nth-child(even){transform:rotate(0.7deg)}
 </style>
+<base target="_blank">
 </head>
 <body data-theme="light">
 <div class="wrap">
 <header>
   <div>
-    <h1 id="sn">Calaye Store</h1>
+    <h1 id="sn">🌿 Calaye Store</h1>
   </div>
   <nav id="nav"></nav>
 </header>
@@ -276,7 +344,7 @@ window.toggleTheme = function() {
   const current = body.getAttribute('data-theme');
   const next = current === 'dark' ? 'light' : 'dark';
   body.setAttribute('data-theme', next);
-  toast(next === 'dark' ? '🌙 Dark Mode Aktif' : '☀️ Light Mode Aktif');
+  toast(next === 'dark' ? '🌙 Dark Mode Hijau Aktif' : '☀️ Light Mode Hijau Aktif');
 };
 
 onSnapshot(doc(db, "store", "config"), (docSnap) => {
@@ -290,7 +358,7 @@ function triggerAnimation() {
   const appEl = $('app');
   if (appEl) {
     appEl.classList.remove('page-transition');
-    void appEl.offsetWidth; // Trigger reflow
+    void appEl.offsetWidth;
     appEl.classList.add('page-transition');
   }
 }
@@ -314,11 +382,11 @@ window.openDetail = function(productId) {
 
 function render() {
   document.title = nm();
-  if ($('sn')) $('sn').textContent = nm();
+  if ($('sn')) $('sn').innerHTML = '<svg class="clove-logo" width="26" height="26" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="clv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#059669"/></linearGradient></defs><path d="M12 1.5C5.5 8 5 16 12 22.5C19 16 18.5 8 12 1.5Z" fill="url(#clv)"/><path d="M12 4.5V20" stroke="#f4fbf7" stroke-width="1" stroke-linecap="round" opacity="0.7"/><path d="M12 9l-3.2 2.8M12 9l3.2 2.8M12 14l-2.6 2.4M12 14l2.6 2.4" stroke="#f4fbf7" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/></svg><span>' + esc(nm()) + '</span>';
   
   const bannerEl = $('banner-container');
   if (DB.announcement && DB.announcement.active && DB.announcement.text) {
-    bannerEl.innerHTML = `<div class="announcement-banner">📢 <span>${esc(DB.announcement.text)}</span></div>`;
+    bannerEl.innerHTML = `<div class="announcement-banner">🌻 <span>${esc(DB.announcement.text)}</span></div>`;
   } else {
     bannerEl.innerHTML = '';
   }
@@ -352,7 +420,7 @@ function renderFloatingCart() {
     floating.innerHTML = `
       <div class="cart-bubble" onclick="window.go('cart')">
         <div style="display:flex; align-items:center; gap:8px;">
-          <span style="background:#fff; color:var(--ink); padding:4px 10px; border-radius:99px; font-size:12px;">🛒 ${count} Item</span>
+          <span style="background:#fff; color:var(--acc); padding:4px 10px; border-radius:99px; font-size:12px;">🛒 ${count} Item</span>
           <span>Buka Keranjang</span>
         </div>
         <span>${rp(subtotal)} →</span>
@@ -382,7 +450,8 @@ function shop() {
         
         return `
           <div class="card-glow-wrap" style="animation-delay: ${delay}s">
-            <div class="card" onclick="window.openDetail('${p.id}')">
+            <div class="card sticky" onclick="window.openDetail('${p.id}')">
+              <div class="washi-tape"></div>
               ${p.img ? `<img src="${esc(p.img)}" class="prod-img" alt="${esc(p.name)}">` : ''}
               <div class="row">
                 <h3>${esc(p.name)}</h3>
@@ -412,7 +481,8 @@ function detailProduct() {
   const cur = variants.find(v => v.id === sel[p.id]) || variants.find(v => (v.stock || 0) > 0) || variants[0];
 
   return `
-    <div class="card" style="cursor:default;">
+    <div class="card" style="cursor:default; position:relative;">
+      <div class="washi-tape" style="left:40px; transform:rotate(-6deg);"></div>
       <button class="btn sm" onclick="window.go('shop')" style="margin-bottom:12px;">← Kembali ke Katalog</button>
       
       ${p.img ? `<img src="${esc(p.img)}" class="prod-img-detail" alt="${esc(p.name)}">` : ''}
@@ -611,7 +681,7 @@ async function checkout() {
   const targetWA = (DB.settings && DB.settings.wa) ? DB.settings.wa : '6281234567890';
   const firstProductName = items.length > 0 ? items[0].name : 'Produk';
 
-  const text = `.° Halo Admin Calaye Store ~ 🙆🏻‍♀️\n\n======================\nINVOICE PEMESANAN\n======================\n\n🗓️ Tanggal: ${dateStr}\n#${firstProductName}\nKode pemesanan: *${code}*\n☎ No wa: ${wa} (${name})\n\n── RINCIAN PESANAN ──\n` + 
+  const text = `.° Halo Admin Calaye Store ~ 🌿\n\n======================\nINVOICE PEMESANAN\n======================\n\n🗓️ Tanggal: ${dateStr}\n#${firstProductName}\nKode pemesanan: *${code}*\n☎ No wa: ${wa} (${name})\n\n── RINCIAN PESANAN ──\n` + 
     items.map(x => `› ${x.name} (${x.label})\n${x.qty}× ${rp(x.price)} · ${rp(x.price * x.qty)}`).join('\n') + 
     `\n\n----------------------\n📝 TOTAL: *${rp(total)}*\n----------------------\n\nMETODE PEMBAYARAN: ☑ *${selectedPay}*`;
 
