@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Pustaka QRCode.js untuk memastikan barcode pasti tampil -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
   box-sizing:border-box;
@@ -17,7 +19,7 @@
   --ink:#2b1c38;
   --mute:#867597;
   --acc:#8b5cf6;
-  --acc-glow:rgba(139,92,246,0.25);
+  --acc-glow:rgba(139, 92, 246, 0.25);
   --grad-btn:linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
   --line:#ebdcf5;
   --ok:#10b981;
@@ -73,7 +75,7 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
   padding:10px 20px;border-radius:99px;font-size:12px;font-weight:600;z-index:99;box-shadow:0 5px 20px rgba(0,0,0,0.2);
 }
 .qris-box{text-align:center;background:#fff;padding:16px;border-radius:16px;border:1px solid var(--line);margin-top:12px;}
-.qris-box img{width:220px;height:220px;object-fit:contain;margin:8px auto;display:block;border-radius:8px;}
+.qris-render{display:flex;justify-content:center;margin:10px auto;}
 .success-icon{font-size:54px;margin-bottom:8px;}
 
 /* Floating Cart Bubble di Bawah */
@@ -213,9 +215,37 @@ function render() {
   const app = $('app');
   if (app) {
     app.innerHTML = view === 'shop' ? shop() : cartV();
+    if (view === 'cart' && !last && Object.keys(cart).length > 0) {
+      renderQRCode();
+    }
   }
 
   renderFloatingCart();
+}
+
+function renderQRCode() {
+  const qrisContainer = $('qris-qrcode-box');
+  if (!qrisContainer) return;
+  qrisContainer.innerHTML = ''; // Kosongkan dulu
+  
+  let subtotal = 0;
+  Object.keys(cart).forEach(i => { const f = findVar(i); if (f) subtotal += f.v.price * cart[i]; });
+  let discount = 0;
+  const coupons = DB.coupons || [];
+  const cObj = coupons.find(x => (x.code || '').toUpperCase() === coupon.trim().toUpperCase());
+  if (cObj) discount = cObj.type === 'percent' ? subtotal * (cObj.val / 100) : cObj.val;
+  const total = Math.max(0, subtotal - discount);
+  const dynamicQrisStr = total > 0 ? convertQRISDynamic(BASE_QRIS, total) : BASE_QRIS;
+
+  // Render QR Code secara lokal menggunakan qrcode.js
+  new QRCode(qrisContainer, {
+    text: dynamicQrisStr,
+    width: 220,
+    height: 220,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.M
+  });
 }
 
 function renderFloatingCart() {
@@ -277,7 +307,7 @@ function shop() {
             ` : ''}
           </div>`;
       }).join('') : '<div class="card" style="grid-column:span 2;text-align:center;color:var(--mute)">Produk tidak ditemukan</div>'}
-    `;
+    </div>`;
 }
 
 function findVar(vid) {
@@ -325,7 +355,7 @@ function cartV() {
         ` : `
           <div class="success-icon">⏳</div>
           <h3 style="color:var(--acc); margin-bottom:4px">Menunggu Konfirmasi Admin</h3>
-          <p class="mute">Silakan kirim bukti transfer/pembayaran QRIS ke WhatsApp admin.</p>
+          <p class="mute">Silakan kirim bukti pembayaran QRIS ke WhatsApp admin.</p>
           <div style="background:#f8f5fc; border:1px solid var(--line); padding:14px; border-radius:14px; margin:16px 0;">
             <b>Kode Order: ${last.code}</b><br>
             <span class="badge bad" style="margin-top:6px; display:inline-block;">STATUS: MENUNGGU PEMBAYARAN</span>
@@ -351,7 +381,6 @@ function cartV() {
     discName = `Diskon (${cObj.code})`;
   }
   const total = Math.max(0, subtotal - discount);
-  const dynamicQrisStr = total > 0 ? convertQRISDynamic(BASE_QRIS, total) : BASE_QRIS;
 
   return `
     <div class="card">
@@ -385,11 +414,11 @@ function cartV() {
       <div class="sp"><input id="cn" placeholder="Nama Lengkap Anda"></div>
       <div class="sp"><input id="cw" inputmode="tel" placeholder="Nomor WhatsApp (Contoh: 08123456789)"></div>
       
-      <!-- Fokus Pembayaran Barcode QRIS Saja -->
+      <!-- Kotak Barcode QRIS Lokal (Pasti Tampil & Dinamis) -->
       <div class="qris-box">
         <b style="font-size:14px; color:var(--acc);">Scan Barcode QRIS Otomatis</b>
         <div style="font-size:18px; font-weight:800; color:var(--ok); margin-top:4px;">${rp(total)}</div>
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(dynamicQrisStr)}" alt="QRIS Barcode">
+        <div id="qris-qrcode-box" class="qris-render"></div>
         <div style="font-size:11px; color:var(--mute); margin-top:6px;">Mendukung DANA, GoPay, OVO, ShopeePay, & m-Banking.</div>
       </div>
 
