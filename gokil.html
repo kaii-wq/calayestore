@@ -173,7 +173,6 @@ onSnapshot(doc(db, "store", "config"), (docSnap) => {
     updateStats();
     renderTab();
   } else {
-    // Jika belum ada di firebase, buat dokumen awal
     setDoc(doc(db, "store", "config"), seedData());
   }
 });
@@ -346,7 +345,6 @@ function setTab(tab, el) {
   if (el) el.classList.add('on');
   renderTab();
 }
-window.setTab = setTab;
 
 function renderTab() {
   const app = document.getElementById('app');
@@ -481,6 +479,9 @@ function renderProducts(el) {
 }
 
 const esc = s => String(s || '').replace(/"/g, '&quot;');
+
+// EKSPOS FUNGSI KE WINDOW SUPAYA BISA DIPANGGIL HTML
+window.setTab = setTab;
 window.updProd = (pi, field, val) => { DB.products[pi][field] = val; save(); };
 window.updVar = (pid, vid, field, val) => {
   const p = DB.products.find(x => x.id === pid);
@@ -573,6 +574,7 @@ window.exportData = () => {
   dl.click();
   dl.remove();
 };
+window.window = window; // Pastikan scope window global stabil
 </script>
 </body>
 </html>
