@@ -80,6 +80,7 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
 .success-icon{font-size:54px;margin-bottom:8px;animation:bounce .5s infinite alternate;}
 @keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-6px)}}
 .sp{margin-top:12px}
+.prod-img{width:100%;height:130px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:#eee;}
 </style>
 </head>
 <body>
@@ -87,7 +88,7 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
 <header>
   <div>
     <h1 id="sn">Calaye Store</h1>
-    <small>Kota Yogyakarta • Firebase Realtime Live</small>
+    <small>Kota Yogyakarta • Real-Time Cloud Store</small>
   </div>
   <nav id="nav"></nav>
 </header>
@@ -95,12 +96,10 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
 </div>
 <div id="toast"></div>
 
-<!-- Firebase SDK via CDN -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Konfigurasi Firebase Project Calayestore
 const firebaseConfig = {
   apiKey: "AIzaSyAk3iZuyjIrexLN1UQ-HMW2CuwoOG2Ivhw",
   authDomain: "calayestore.firebaseapp.com",
@@ -113,7 +112,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const DB_KEY = 'calaye_store_db_v5';
 const BASE_QRIS = "00020101021126570011ID.DANA.WWW011893600915395683928802099568392880303UMI51440014ID.CO.QRIS.WWW0215ID10254193879030303UMI5204581353033605802ID5913Calaye Store 6015Kota Yogyakarta6105552726304B6D6";
 
 function convertQRISDynamic(qris, amount) {
@@ -136,31 +134,11 @@ function convertQRISDynamic(qris, amount) {
   return base + (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, "0");
 }
 
-const seedData = () => ({
+let DB = {
   settings: { name: 'Calaye Store', wa: '6281234567890' },
-  coupons: [{ code: 'CALAYE20', type: 'percent', val: 10 }],
-  products: [
-    {
-      id: 'p1', name: 'Canva Pro', cat: 'Desain', status: 'tersedia',
-      variants: [
-        { id: 'v1', label: '1 Bulan', price: 10000, stock: 10 },
-        { id: 'v2', label: '1 Tahun', price: 60000, stock: 5 }
-      ]
-    }
-  ]
-});
-
-let DB;
-function loadDB() {
-  try {
-    const raw = localStorage.getItem(DB_KEY);
-    if (raw) DB = JSON.parse(raw);
-  } catch (e) {}
-  if (!DB || !Array.isArray(DB.products)) {
-    DB = seedData();
-  }
-}
-loadDB();
+  coupons: [],
+  products: []
+};
 
 let view = 'shop', cat = 'Semua', searchQuery = '', cart = {}, sel = {}, last = null, coupon = '';
 let paymentTimer = null;
@@ -181,6 +159,14 @@ function toast(m) {
   }
 }
 
+// Dengarkan perubahan konfigurasi toko secara real-time dari Firebase
+onSnapshot(doc(db, "store", "config"), (docSnap) => {
+  if (docSnap.exists()) {
+    DB = docSnap.data();
+    render();
+  }
+});
+
 function go(v) { 
   if (v !== 'cart') { 
     clearInterval(paymentTimer); 
@@ -188,6 +174,7 @@ function go(v) {
   }
   view = v; last = null; render(); 
 }
+window.go = go;
 
 function render() {
   document.title = nm();
@@ -196,8 +183,6 @@ function render() {
     $('nav').innerHTML = `
       <button class="btn sm ${view === 'shop' ? 'on' : ''}" onclick="window.go('shop')">Katalog</button>
       <button class="btn sm ${view === 'cart' ? 'on' : ''}" onclick="window.go('cart')">Keranjang${cartN() ? ' (' + cartN() + ')' : ''}</button>
-      <button class="btn sm" onclick="document.getElementById('importFile').click()">📂 Update Stok</button>
-      <input type="file" id="importFile" style="display:none" accept=".json" onchange="window.importJSON(event)">
     `;
   }
   
@@ -208,8 +193,8 @@ function render() {
 }
 
 function shop() {
-  const cats = ['Semua', ...new Set(DB.products.map(p => p.cat || 'Lainnya'))];
-  const list = DB.products.filter(p => (cat === 'Semua' || p.cat === cat) && (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+  const cats = ['Semua', ...new Set((DB.products || []).map(p => p.cat || 'Lainnya'))];
+  const list = (DB.products || []).filter(p => (cat === 'Semua' || p.cat === cat) && (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()));
 
   return `
     <div style="margin-bottom:12px;">
@@ -226,6 +211,7 @@ function shop() {
         
         return `
           <div class="card">
+            ${p.img ? `<img src="${esc(p.img)}" class="prod-img" alt="${esc(p.name)}">` : ''}
             <div class="row">
               <h3>${esc(p.name)}</h3>
               <span class="badge ${off ? 'bad' : 'ok'}">${off ? 'Habis' : 'Tersedia'}</span>
@@ -249,7 +235,7 @@ function shop() {
 }
 
 function findVar(vid) {
-  for (const p of DB.products) {
+  for (const p of (DB.products || [])) {
     if (p.variants) {
       const v = p.variants.find(x => x.id === vid);
       if (v) return { p, v };
@@ -347,7 +333,7 @@ function cartV() {
       <div class="row sp" style="font-size:16px;"><b>Total Bayar</b><span class="price">${rp(total)}</span></div>
 
       <div class="sp row" style="gap:6px">
-        <input style="flex:1" placeholder="Kode Kupon (Contoh: CALAYE20)" value="${esc(coupon)}" oninput="window.coupon=this.value">
+        <input style="flex:1" placeholder="Kode Kupon (Contoh: CALAYE20)" value="${esc(coupon)}" oninput="window.setCoupon(this.value)">
         <button class="btn sm" onclick="window.render()">Pakai Kupon</button>
       </div>
 
@@ -432,7 +418,7 @@ async function checkout() {
   const total = Math.max(0, subtotal - discount);
 
   const targetWA = (DB.settings && DB.settings.wa) ? DB.settings.wa : '6281234567890';
-  const text = `Halo Calaye Store, saya sudah memesan:\n\nKode Order: *${code}*\nNama: ${name}\nWA: ${wa}\n\nRincian Pesanan:\n` + items.map((x, n) => `${n + 1}. ${x.name} (${x.label}) x${x.qty} = ${rp(x.price * x.qty)}`).join('\n') + `\n\n*Total Bayar: ${rp(total)}*\nMetode Pembayaran: *${paymentMethod}*\n\n(Saya akan segera konfirmasi pembayaran). Terima kasih!`;
+  const text = `Halo ${nm()}, saya sudah memesan:\n\nKode Order: *${code}*\nNama: ${name}\nWA: ${wa}\n\nRincian Pesanan:\n` + items.map((x, n) => `${n + 1}. ${x.name} (${x.label}) x${x.qty} = ${rp(x.price * x.qty)}`).join('\n') + `\n\n*Total Bayar: ${rp(total)}*\nMetode Pembayaran: *${paymentMethod}*\n\n(Saya akan segera konfirmasi pembayaran). Terima kasih!`;
   const url = 'https://wa.me/' + targetWA + '?text=' + encodeURIComponent(text);
 
   try {
@@ -465,31 +451,11 @@ async function checkout() {
   }
 }
 
-function importJSON(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function (evt) {
-    try {
-      const parsed = JSON.parse(evt.target.result);
-      if (parsed && parsed.products) {
-        DB = parsed;
-        localStorage.setItem(DB_KEY, JSON.stringify(DB));
-        render();
-        toast('Stok & Data berhasil diperbarui! ✨');
-      }
-    } catch (err) { toast('Gagal mengimpor file JSON!'); }
-  };
-  reader.readAsText(file);
-}
-
-// EKSPOS FUNGSI KE GLOBAL (WINDOW) AGAR BISA DIPANGGIL HTML ONCLICK/ONINPUT
-window.go = go;
-window.render = render;
+// Bind fungsi ke window agar dapat dipanggil elemen HTML
 window.add = add;
 window.qty = qty;
 window.checkout = checkout;
-window.importJSON = importJSON;
+window.render = render;
 window.setCat = (c) => { cat = c; render(); };
 window.setSel = (pid, vid) => { sel[pid] = vid; render(); };
 window.setSearch = (val) => { searchQuery = val; render(); };
