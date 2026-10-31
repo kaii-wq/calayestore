@@ -188,17 +188,16 @@ function go(v) {
   }
   view = v; last = null; render(); 
 }
-window.go = go;
 
 function render() {
   document.title = nm();
   if ($('sn')) $('sn').textContent = nm();
   if ($('nav')) {
     $('nav').innerHTML = `
-      <button class="btn sm ${view === 'shop' ? 'on' : ''}" onclick="go('shop')">Katalog</button>
-      <button class="btn sm ${view === 'cart' ? 'on' : ''}" onclick="go('cart')">Keranjang${cartN() ? ' (' + cartN() + ')' : ''}</button>
+      <button class="btn sm ${view === 'shop' ? 'on' : ''}" onclick="window.go('shop')">Katalog</button>
+      <button class="btn sm ${view === 'cart' ? 'on' : ''}" onclick="window.go('cart')">Keranjang${cartN() ? ' (' + cartN() + ')' : ''}</button>
       <button class="btn sm" onclick="document.getElementById('importFile').click()">📂 Update Stok</button>
-      <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(event)">
+      <input type="file" id="importFile" style="display:none" accept=".json" onchange="window.importJSON(event)">
     `;
   }
   
@@ -214,10 +213,10 @@ function shop() {
 
   return `
     <div style="margin-bottom:12px;">
-      <input type="text" placeholder="🔍 Cari aplikasi..." value="${esc(searchQuery)}" oninput="searchQuery=this.value;render()">
+      <input type="text" placeholder="🔍 Cari aplikasi..." value="${esc(searchQuery)}" oninput="window.setSearch(this.value)">
     </div>
     <div class="chips">
-      ${cats.map(c => `<button class="btn sm ${c === cat ? 'on' : ''}" onclick="cat='${esc(c)}';render()">${esc(c)}</button>`).join('')}
+      ${cats.map(c => `<button class="btn sm ${c === cat ? 'on' : ''}" onclick="window.setCat('${esc(c)}')">${esc(c)}</button>`).join('')}
     </div>
     <div class="grid">
       ${list.length ? list.map(p => {
@@ -233,7 +232,7 @@ function shop() {
             </div>
             <div class="mute">${esc(p.cat)}</div>
             <div class="vs">
-              ${variants.map(v => `<button class="v ${cur && v.id === cur.id ? 'on' : ''}" ${(v.stock || 0) < 1 ? 'disabled' : ''} onclick="sel['${p.id}']='${v.id}';render()">${esc(v.label)}</button>`).join('')}
+              ${variants.map(v => `<button class="v ${cur && v.id === cur.id ? 'on' : ''}" ${(v.stock || 0) < 1 ? 'disabled' : ''} onclick="window.setSel('${p.id}','${v.id}')">${esc(v.label)}</button>`).join('')}
             </div>
             ${cur ? `
               <div class="row">
@@ -241,14 +240,13 @@ function shop() {
                   <div class="price">${rp(cur.price)}</div>
                   <div class="mute">Stok: ${cur.stock || 0}</div>
                 </div>
-                <button class="btn pri sm" ${off || (cur.stock || 0) < 1 ? 'disabled' : ''} onclick="add('${cur.id}')">+ Keranjang</button>
+                <button class="btn pri sm" ${off || (cur.stock || 0) < 1 ? 'disabled' : ''} onclick="window.add('${cur.id}')">+ Keranjang</button>
               </div>
             ` : ''}
           </div>`;
       }).join('') : '<div class="card" style="grid-column:span 2;text-align:center;color:var(--mute)">Produk tidak ditemukan</div>'}
     </div>`;
 }
-window.cat = 'Semua';
 
 function findVar(vid) {
   for (const p of DB.products) {
@@ -268,7 +266,6 @@ function add(id) {
   toast(f.p.name + ' ditambahkan 🛒');
   render();
 }
-window.add = add;
 
 function qty(id, d) {
   const f = findVar(id);
@@ -279,7 +276,6 @@ function qty(id, d) {
   else cart[id] = n;
   render();
 }
-window.qty = qty;
 
 function cartV() {
   if (last) {
@@ -306,12 +302,12 @@ function cartV() {
         `}
         
         <a class="btn pri sp" style="display:inline-block;text-decoration:none;margin-top:8px" href="${last.url}" target="_blank" rel="noopener">Kirim Bukti ke WhatsApp 🚀</a>
-        <div style="margin-top:16px"><button class="btn sm" onclick="go('shop')">← Belanja Lagi</button></div>
+        <div style="margin-top:16px"><button class="btn sm" onclick="window.go('shop')">← Belanja Lagi</button></div>
       </div>`;
   }
 
   const ids = Object.keys(cart);
-  if (!ids.length) return '<div class="card" style="text-align:center;padding:30px"><p class="mute">Keranjang belanjaan kamu masih kosong.</p><button class="btn pri sm sp" onclick="go(\'shop\')">Lihat Katalog</button></div>';
+  if (!ids.length) return '<div class="card" style="text-align:center;padding:30px"><p class="mute">Keranjang belanjaan kamu masih kosong.</p><button class="btn pri sm sp" onclick="window.go(\'shop\')">Lihat Katalog</button></div>';
 
   let subtotal = 0;
   ids.forEach(i => { const f = findVar(i); if (f) subtotal += f.v.price * cart[i]; });
@@ -339,9 +335,9 @@ function cartV() {
               <div class="mute">${esc(f.v.label)} · ${rp(f.v.price)}</div>
             </div>
             <div class="row">
-              <button class="btn sm" onclick="qty('${i}',-1)">−</button>
+              <button class="btn sm" onclick="window.qty('${i}',-1)">−</button>
               <b style="min-width:20px;text-align:center">${cart[i]}</b>
-              <button class="btn sm" onclick="qty('${i}',1)">+</button>
+              <button class="btn sm" onclick="window.qty('${i}',1)">+</button>
             </div>
           </div>`;
       }).join('')}
@@ -351,8 +347,8 @@ function cartV() {
       <div class="row sp" style="font-size:16px;"><b>Total Bayar</b><span class="price">${rp(total)}</span></div>
 
       <div class="sp row" style="gap:6px">
-        <input style="flex:1" placeholder="Kode Kupon (Contoh: CALAYE20)" value="${esc(coupon)}" oninput="coupon=this.value">
-        <button class="btn sm" onclick="render()">Pakai Kupon</button>
+        <input style="flex:1" placeholder="Kode Kupon (Contoh: CALAYE20)" value="${esc(coupon)}" oninput="window.coupon=this.value">
+        <button class="btn sm" onclick="window.render()">Pakai Kupon</button>
       </div>
 
       <div class="sp"><input id="cn" placeholder="Nama Lengkap Kamu"></div>
@@ -373,7 +369,7 @@ function cartV() {
         <div style="font-size:11px; color:var(--mute); margin-top:6px;">Scan barcode di atas menggunakan DANA, GoPay, OVO, ShopeePay, atau m-Banking.</div>
       </div>
 
-      <button class="btn pri sp" style="width:100%; padding: 12px;" onclick="checkout()">Konfirmasi & Bayar via WhatsApp 🚀</button>
+      <button class="btn pri sp" style="width:100%; padding: 12px;" onclick="window.checkout()">Konfirmasi & Bayar via WhatsApp 🚀</button>
     </div>`;
 }
 
@@ -381,7 +377,6 @@ function startTimer(docId) {
   clearInterval(paymentTimer);
   timeLeft = 120;
   
-  // Real-time listener ke Firestore untuk pesanan ini
   if (unsubscribeOrderStatus) unsubscribeOrderStatus();
   unsubscribeOrderStatus = onSnapshot(doc(db, "orders", docId), (snapshot) => {
     if (snapshot.exists()) {
@@ -441,7 +436,6 @@ async function checkout() {
   const url = 'https://wa.me/' + targetWA + '?text=' + encodeURIComponent(text);
 
   try {
-    // Kirim pesanan langsung ke Firebase Cloud Firestore secara online
     const orderData = {
       code,
       name,
@@ -470,7 +464,6 @@ async function checkout() {
     alert('Gagal mengirim pesanan ke cloud: ' + err.message);
   }
 }
-window.checkout = checkout;
 
 function importJSON(e) {
   const file = e.target.files[0];
@@ -489,7 +482,18 @@ function importJSON(e) {
   };
   reader.readAsText(file);
 }
+
+// EKSPOS FUNGSI KE GLOBAL (WINDOW) AGAR BISA DIPANGGIL HTML ONCLICK/ONINPUT
+window.go = go;
+window.render = render;
+window.add = add;
+window.qty = qty;
+window.checkout = checkout;
 window.importJSON = importJSON;
+window.setCat = (c) => { cat = c; render(); };
+window.setSel = (pid, vid) => { sel[pid] = vid; render(); };
+window.setSearch = (val) => { searchQuery = val; render(); };
+window.setCoupon = (val) => { coupon = val; };
 
 render();
 </script>
