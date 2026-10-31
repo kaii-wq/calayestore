@@ -62,30 +62,83 @@ button,input,select{font:inherit;color:inherit}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:480px){.grid{grid-template-columns:1fr}}
 
-.card{
-  background:var(--card);border:1px solid var(--card-border);
-  border-radius:20px;padding:16px;box-shadow:var(--shadow);
-  transition:transform .3s ease, box-shadow .3s ease;
+/* Animasi Transisi Halaman (Masuk & Keluar Detail) */
+.page-transition {
+  animation: pageSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Efek Border Gradasi Berputar Saat Hover */
+.card-glow-wrap {
+  position: relative;
+  border-radius: 20px;
+  padding: 2px;
+  background: var(--card-border);
+  transition: all 0.3s ease;
   animation: fadeUp .5s ease forwards;
 }
-.card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 15px 35px rgba(139,92,246,0.14);
+
+.card-glow-wrap:hover {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899, #8b5cf6);
+  background-size: 200% 200%;
+  animation: borderRotate 3s linear infinite, floatCard 0.3s ease forwards;
+  box-shadow: 0 15px 35px rgba(139,92,246,0.25);
+}
+
+@keyframes borderRotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes floatCard {
+  to { transform: translateY(-4px); }
+}
+
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:16px;
+  height: 100%;
+  cursor: pointer;
 }
 .card h3{margin:0 0 2px;font-size:15px;font-weight:700}
 .mute{color:var(--mute);font-size:12px}
-.desc{color:var(--mute);font-size:11px;margin:6px 0 10px;line-height:1.4;}
+
+/* Kotak Detail Deskripsi Penuh di Halaman Detail */
+.desc-detail {
+  color: var(--ink);
+  font-size: 13px;
+  margin: 14px 0;
+  line-height: 1.6;
+  background: var(--bg1);
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  white-space: pre-line;
+}
+
 .vs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 
 .v{
-  border:1px solid var(--line);border-radius:10px;padding:5px 10px;background:transparent;
+  border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:transparent;
   cursor:pointer;font-size:12px;font-weight:600;transition:all .2s ease;color:var(--ink);
 }
 .v:hover{border-color:var(--acc);}
 .v.on{background:var(--acc);color:#fff;border-color:transparent;box-shadow:0 2px 10px var(--acc-glow)}
 .v:disabled{opacity:.4;cursor:not-allowed}
 
-.price{font-size:16px;font-weight:800;color:var(--acc)}
+.price{font-size:18px;font-weight:800;color:var(--acc)}
 .row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 
 input,select{
@@ -141,12 +194,12 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
 .sp{margin-top:12px}
 .prod-img{
   width:100%;height:130px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:#eee;
-  transition:transform .3s ease;
 }
-.card:hover .prod-img{transform:scale(1.02);}
+.prod-img-detail{
+  width:100%;height:220px;object-fit:cover;border-radius:14px;margin-bottom:14px;background:#eee;
+}
 
 /* Keyframe Animations */
-@keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-15px)}to{opacity:1;transform:translateY(0)}}
 @keyframes floatIn{from{opacity:0;transform:translate(-50%, 40px)}to{opacity:1;transform:translate(-50%, 0)}}
@@ -170,7 +223,7 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
 <!-- Banner Pengumuman dari Admin -->
 <div id="banner-container"></div>
 
-<main id="app"></main>
+<main id="app" class="page-transition"></main>
 </div>
 <div id="toast"></div>
 
@@ -201,6 +254,7 @@ let DB = {
 };
 
 let view = 'shop', cat = 'Semua', searchQuery = '', cart = {}, sel = {}, last = null, coupon = '', selectedPay = 'QRIS';
+let selectedProduct = null;
 let unsubscribeOrderStatus = null;
 
 const $ = id => document.getElementById(id);
@@ -217,7 +271,6 @@ function toast(m) {
   }
 }
 
-// Toggle Dark/Light Mode
 window.toggleTheme = function() {
   const body = document.body;
   const current = body.getAttribute('data-theme');
@@ -226,7 +279,6 @@ window.toggleTheme = function() {
   toast(next === 'dark' ? '🌙 Dark Mode Aktif' : '☀️ Light Mode Aktif');
 };
 
-// Sinkronisasi data real-time dari Firebase
 onSnapshot(doc(db, "store", "config"), (docSnap) => {
   if (docSnap.exists()) {
     DB = docSnap.data();
@@ -234,11 +286,31 @@ onSnapshot(doc(db, "store", "config"), (docSnap) => {
   }
 });
 
+function triggerAnimation() {
+  const appEl = $('app');
+  if (appEl) {
+    appEl.classList.remove('page-transition');
+    void appEl.offsetWidth; // Trigger reflow
+    appEl.classList.add('page-transition');
+  }
+}
+
 function go(v) { 
   if (v !== 'cart' && unsubscribeOrderStatus) unsubscribeOrderStatus();
-  view = v; last = null; render(); 
+  view = v; selectedProduct = null; last = null; render(); 
+  triggerAnimation();
 }
 window.go = go;
+
+window.openDetail = function(productId) {
+  const p = (DB.products || []).find(x => x.id === productId);
+  if (p) {
+    selectedProduct = p;
+    view = 'detail';
+    render();
+    triggerAnimation();
+  }
+};
 
 function render() {
   document.title = nm();
@@ -262,7 +334,9 @@ function render() {
   
   const app = $('app');
   if (app) {
-    app.innerHTML = view === 'shop' ? shop() : cartV();
+    if (view === 'shop') app.innerHTML = shop();
+    else if (view === 'detail') app.innerHTML = detailProduct();
+    else if (view === 'cart') app.innerHTML = cartV();
   }
 
   renderFloatingCart();
@@ -271,7 +345,7 @@ function render() {
 function renderFloatingCart() {
   const floating = $('floating-cart');
   const count = cartN();
-  if (count > 0 && view === 'shop') {
+  if (count > 0 && view !== 'cart') {
     let subtotal = 0;
     Object.keys(cart).forEach(i => { const f = findVar(i); if(f) subtotal += f.v.price * cart[i]; });
     
@@ -307,28 +381,65 @@ function shop() {
         const delay = (index * 0.08).toFixed(2);
         
         return `
-          <div class="card" style="animation-delay: ${delay}s">
-            ${p.img ? `<img src="${esc(p.img)}" class="prod-img" alt="${esc(p.name)}">` : ''}
-            <div class="row">
-              <h3>${esc(p.name)}</h3>
-              <span class="badge ${off ? 'bad' : 'ok'}">${off ? 'Habis' : 'Tersedia'}</span>
-            </div>
-            <div class="mute">${esc(p.cat)}</div>
-            ${p.desc ? `<div class="desc">${esc(p.desc)}</div>` : '<div class="desc" style="opacity:0.5">Aplikasi premium bergaransi resmi.</div>'}
-            <div class="vs">
-              ${variants.map(v => `<button class="v ${cur && v.id === cur.id ? 'on' : ''}" ${(v.stock || 0) < 1 ? 'disabled' : ''} onclick="window.setSel('${p.id}','${v.id}')">${esc(v.label)}</button>`).join('')}
-            </div>
-            ${cur ? `
-              <div class="row" style="margin-top:8px;">
-                <div>
-                  <div class="price">${rp(cur.price)}</div>
-                  <div class="mute">Stok: ${cur.stock || 0}</div>
-                </div>
-                <button class="btn pri sm" ${off || (cur.stock || 0) < 1 ? 'disabled' : ''} onclick="window.add('${cur.id}')">+ Keranjang</button>
+          <div class="card-glow-wrap" style="animation-delay: ${delay}s">
+            <div class="card" onclick="window.openDetail('${p.id}')">
+              ${p.img ? `<img src="${esc(p.img)}" class="prod-img" alt="${esc(p.name)}">` : ''}
+              <div class="row">
+                <h3>${esc(p.name)}</h3>
+                <span class="badge ${off ? 'bad' : 'ok'}">${off ? 'Habis' : 'Tersedia'}</span>
               </div>
-            ` : ''}
+              <div class="mute">${esc(p.cat)}</div>
+              ${cur ? `
+                <div class="row" style="margin-top:12px;">
+                  <div>
+                    <div class="price" style="font-size:15px;">${rp(cur.price)}</div>
+                    <div class="mute">Mulai dari</div>
+                  </div>
+                  <span class="btn sm pri">Pilih Produk →</span>
+                </div>
+              ` : ''}
+            </div>
           </div>`;
       }).join('') : '<div class="card" style="grid-column:span 2;text-align:center;color:var(--mute)">Produk tidak ditemukan</div>'}
+    </div>`;
+}
+
+function detailProduct() {
+  if (!selectedProduct) return '<div class="card" style="text-align:center">Produk tidak ditemukan</div>';
+  const p = selectedProduct;
+  const variants = p.variants || [];
+  const off = p.status !== 'tersedia' || variants.every(v => (v.stock || 0) < 1);
+  const cur = variants.find(v => v.id === sel[p.id]) || variants.find(v => (v.stock || 0) > 0) || variants[0];
+
+  return `
+    <div class="card" style="cursor:default;">
+      <button class="btn sm" onclick="window.go('shop')" style="margin-bottom:12px;">← Kembali ke Katalog</button>
+      
+      ${p.img ? `<img src="${esc(p.img)}" class="prod-img-detail" alt="${esc(p.name)}">` : ''}
+      
+      <div class="row">
+        <h2 style="margin:0; font-size:20px; font-weight:800;">${esc(p.name)}</h2>
+        <span class="badge ${off ? 'bad' : 'ok'}">${off ? 'Habis' : 'Tersedia'}</span>
+      </div>
+      <div class="mute" style="margin-top:2px;">Kategori: ${esc(p.cat)}</div>
+
+      <!-- Deskripsi Penuh dengan format spasi/enter -->
+      ${p.desc ? `<div class="desc-detail">${esc(p.desc)}</div>` : '<div class="desc-detail" style="opacity:0.5">Aplikasi premium bergaransi resmi.</div>'}
+
+      <div style="font-size:13px; font-weight:700; margin-bottom:6px;">Pilih Varian Durasi:</div>
+      <div class="vs" style="margin-bottom:16px;">
+        ${variants.map(v => `<button class="v ${cur && v.id === cur.id ? 'on' : ''}" ${(v.stock || 0) < 1 ? 'disabled' : ''} onclick="window.setSel('${p.id}','${v.id}'); window.openDetail('${p.id}')">${esc(v.label)}</button>`).join('')}
+      </div>
+
+      ${cur ? `
+        <div class="row" style="background:var(--bg1); padding:14px; border-radius:14px; border:1px solid var(--line);">
+          <div>
+            <div class="price">${rp(cur.price)}</div>
+            <div class="mute">Stok tersedia: ${cur.stock || 0}</div>
+          </div>
+          <button class="btn pri" ${off || (cur.stock || 0) < 1 ? 'disabled' : ''} onclick="window.add('${cur.id}')">+ Masukkan Keranjang</button>
+        </div>
+      ` : ''}
     </div>`;
 }
 
@@ -347,7 +458,7 @@ function add(id) {
   if (!f) return;
   if ((cart[id] || 0) >= f.v.stock) { toast('Stok tidak cukup!'); return; }
   cart[id] = (cart[id] || 0) + 1;
-  toast(f.p.name + ' ditambahkan 🛒');
+  toast(f.p.name + ' ditambahkan ke keranjang 🛒');
   render();
 }
 
@@ -372,7 +483,7 @@ function cartV() {
   if (last) {
     const isSuccess = last.status === 'SUCCESS' || last.status === 'Selesai';
     return `
-      <div class="card" style="text-align:center;padding:32px 20px">
+      <div class="card" style="text-align:center;padding:32px 20px; cursor:default;">
         ${isSuccess ? `
           <div class="success-icon">🎉</div>
           <h2 style="color:var(--ok); margin-bottom:6px">Pembayaran Berhasil!</h2>
@@ -397,7 +508,7 @@ function cartV() {
   }
 
   const ids = Object.keys(cart);
-  if (!ids.length) return '<div class="card" style="text-align:center;padding:40px"><p class="mute">Keranjang belanjaan kamu masih kosong.</p><button class="btn pri sm sp" onclick="window.go(\'shop\')">Lihat Katalog</button></div>';
+  if (!ids.length) return '<div class="card" style="text-align:center;padding:40px; cursor:default;"><p class="mute">Keranjang belanjaan kamu masih kosong.</p><button class="btn pri sm sp" onclick="window.go(\'shop\')">Lihat Katalog</button></div>';
 
   let subtotal = 0;
   ids.forEach(i => { const f = findVar(i); if (f) subtotal += f.v.price * cart[i]; });
@@ -412,7 +523,8 @@ function cartV() {
   const total = Math.max(0, subtotal - discount);
 
   return `
-    <div class="card">
+    <div class="card" style="cursor:default;">
+      <button class="btn sm" onclick="window.go('shop')" style="margin-bottom:12px;">← Lanjut Belanja</button>
       <h3>Keranjang Belanja 🛒</h3>
       ${ids.map(i => {
         const f = findVar(i);
@@ -479,7 +591,6 @@ async function checkout() {
   const ids = Object.keys(cart);
   const d = new Date();
   
-  // Format Tanggal: misal "1 okt 26"
   const months = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agt', 'sep', 'okt', 'nov', 'des'];
   const dateStr = `${d.getDate()} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
   
@@ -500,7 +611,6 @@ async function checkout() {
   const targetWA = (DB.settings && DB.settings.wa) ? DB.settings.wa : '6281234567890';
   const firstProductName = items.length > 0 ? items[0].name : 'Produk';
 
-  // Format pesan WhatsApp persis seperti permintaan Anda
   const text = `.° Halo Admin Calaye Store ~ 🙆🏻‍♀️\n\n======================\nINVOICE PEMESANAN\n======================\n\n🗓️ Tanggal: ${dateStr}\n#${firstProductName}\nKode pemesanan: *${code}*\n☎ No wa: ${wa} (${name})\n\n── RINCIAN PESANAN ──\n` + 
     items.map(x => `› ${x.name} (${x.label})\n${x.qty}× ${rp(x.price)} · ${rp(x.price * x.qty)}`).join('\n') + 
     `\n\n----------------------\n📝 TOTAL: *${rp(total)}*\n----------------------\n\nMETODE PEMBAYARAN: ☑ *${selectedPay}*`;
@@ -542,7 +652,7 @@ window.add = add;
 window.qty = qty;
 window.checkout = checkout;
 window.render = render;
-window.setCat = (c) => { cat = c; render(); };
+window.setCat = (c) => { cat = c; render(); triggerAnimation(); };
 window.setSel = (pid, vid) => { sel[pid] = vid; render(); };
 window.setSearch = (val) => { searchQuery = val; render(); };
 window.setCoupon = (val) => { coupon = val; };
