@@ -497,14 +497,13 @@ async function checkout() {
   if (cObj) discount = cObj.type === 'percent' ? subtotal * (cObj.val / 100) : cObj.val;
   const total = Math.max(0, subtotal - discount);
 
-  const storeName = nm();
   const targetWA = (DB.settings && DB.settings.wa) ? DB.settings.wa : '6281234567890';
   const firstProductName = items.length > 0 ? items[0].name : 'Produk';
 
   // Format pesan WhatsApp persis seperti permintaan Anda
-  const text = `Hallo\n🍰 *${storeName.toUpperCase()}*\nTanggal ${dateStr} · #${firstProductName}\nKode pesanan: *${code}*\n☎ Nomer wa: ${wa} (${name})\n\n── rincian pemesanan ──\n` + 
+  const text = `.° Halo Admin Calaye Store ~ 🙆🏻‍♀️\n\n======================\nINVOICE PEMESANAN\n======================\n\n🗓️ Tanggal: ${dateStr}\n#${firstProductName}\nKode pemesanan: *${code}*\n☎ No wa: ${wa} (${name})\n\n── RINCIAN PESANAN ──\n` + 
     items.map(x => `› ${x.name} (${x.label})\n${x.qty}× ${rp(x.price)} · ${rp(x.price * x.qty)}`).join('\n') + 
-    `\n─────────────\n📝 TOTAL BAYAR · *${rp(total)}*\n\nPembayaran: ☑ *${selectedPay}*`;
+    `\n\n----------------------\n📝 TOTAL: *${rp(total)}*\n----------------------\n\nMETODE PEMBAYARAN: ☑ *${selectedPay}*`;
 
   const url = 'https://wa.me/' + targetWA + '?text=' + encodeURIComponent(text);
 
