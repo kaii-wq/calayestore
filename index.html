@@ -87,7 +87,7 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
 <header>
   <div>
     <h1 id="sn">Calaye Store</h1>
-    <small>Kota Yogyakarta • Pesan via WhatsApp</small>
+    <small>Kota Yogyakarta • Firebase Realtime Live</small>
   </div>
   <nav id="nav"></nav>
 </header>
@@ -95,7 +95,24 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-
 </div>
 <div id="toast"></div>
 
-<script>
+<!-- Firebase SDK via CDN -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, addDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// Konfigurasi Firebase Project Calayestore
+const firebaseConfig = {
+  apiKey: "AIzaSyAk3iZuyjIrexLN1UQ-HMW2CuwoOG2Ivhw",
+  authDomain: "calayestore.firebaseapp.com",
+  projectId: "calayestore",
+  storageBucket: "calayestore.appspot.com",
+  messagingSenderId: "1053043880481",
+  appId: "1:1053043880481:web:bb5886b0ac92ec5338e960"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const DB_KEY = 'calaye_store_db_v5';
 const BASE_QRIS = "00020101021126570011ID.DANA.WWW011893600915395683928802099568392880303UMI51440014ID.CO.QRIS.WWW0215ID10254193879030303UMI5204581353033605802ID5913Calaye Store 6015Kota Yogyakarta6105552726304B6D6";
 
@@ -122,7 +139,6 @@ function convertQRISDynamic(qris, amount) {
 const seedData = () => ({
   settings: { name: 'Calaye Store', wa: '6281234567890' },
   coupons: [{ code: 'CALAYE20', type: 'percent', val: 10 }],
-  orders: [],
   products: [
     {
       id: 'p1', name: 'Canva Pro', cat: 'Desain', status: 'tersedia',
@@ -148,7 +164,8 @@ loadDB();
 
 let view = 'shop', cat = 'Semua', searchQuery = '', cart = {}, sel = {}, last = null, coupon = '';
 let paymentTimer = null;
-let timeLeft = 120; // 2 Menit (120 detik)
+let timeLeft = 120;
+let unsubscribeOrderStatus = null;
 
 const $ = id => document.getElementById(id);
 const rp = n => 'Rp' + Number(n || 0).toLocaleString('id-ID');
@@ -165,9 +182,13 @@ function toast(m) {
 }
 
 function go(v) { 
-  if (v !== 'cart') { clearInterval(paymentTimer); }
+  if (v !== 'cart') { 
+    clearInterval(paymentTimer); 
+    if (unsubscribeOrderStatus) unsubscribeOrderStatus();
+  }
   view = v; last = null; render(); 
 }
+window.go = go;
 
 function render() {
   document.title = nm();
@@ -227,6 +248,7 @@ function shop() {
       }).join('') : '<div class="card" style="grid-column:span 2;text-align:center;color:var(--mute)">Produk tidak ditemukan</div>'}
     </div>`;
 }
+window.cat = 'Semua';
 
 function findVar(vid) {
   for (const p of DB.products) {
@@ -246,6 +268,7 @@ function add(id) {
   toast(f.p.name + ' ditambahkan 🛒');
   render();
 }
+window.add = add;
 
 function qty(id, d) {
   const f = findVar(id);
@@ -256,26 +279,20 @@ function qty(id, d) {
   else cart[id] = n;
   render();
 }
+window.qty = qty;
 
 function cartV() {
   if (last) {
-    loadDB();
-    const currentOrder = (DB.orders || []).find(o => o.code === last.code);
-    const orderStatus = currentOrder ? currentOrder.status : 'Menunggu';
-
-    if (orderStatus === 'Selesai') {
-      clearInterval(paymentTimer);
-    }
-
+    const isSuccess = last.status === 'SUCCESS' || last.status === 'Selesai';
     return `
       <div class="card" style="text-align:center;padding:28px 20px">
-        ${orderStatus === 'Selesai' ? `
+        ${isSuccess ? `
           <div class="success-icon">✅</div>
           <h2 style="color:var(--ok); margin-bottom:6px">Pembayaran Berhasil!</h2>
           <p class="mute">Admin telah mengonfirmasi pembayaran Anda. Pesanan sedang diproses.</p>
           <div style="background:rgba(16,185,129,0.08); border:1px solid var(--ok); padding:14px; border-radius:14px; margin:14px 0;">
             <b>Kode Order: ${last.code}</b><br>
-            <span class="badge ok" style="margin-top:6px; display:inline-block;">STATUS: SUDAH DIBAYAR / SELESAI</span>
+            <span class="badge ok" style="margin-top:6px; display:inline-block;">STATUS: LUNAS / SELESAI</span>
           </div>
         ` : `
           <h3 style="color:var(--acc); margin-bottom:4px">Menunggu Pembayaran QRIS ⏳</h3>
@@ -284,12 +301,12 @@ function cartV() {
           
           <div style="background:#fff; border:1px solid var(--line); padding:14px; border-radius:14px; margin:12px 0;">
             <b>Kode Order: ${last.code}</b><br>
-            <span class="badge bad" style="margin-top:6px; display:inline-block;">STATUS: MENUNGGU PEMBAYARAN</span>
+            <span class="badge bad" style="margin-top:6px; display:inline-block;">STATUS: MENUNGGU KONFIRMASI ADMIN</span>
           </div>
         `}
         
         <a class="btn pri sp" style="display:inline-block;text-decoration:none;margin-top:8px" href="${last.url}" target="_blank" rel="noopener">Kirim Bukti ke WhatsApp 🚀</a>
-        <div style="margin-top:16px"><button class="btn sm" onclick="clearInterval(paymentTimer);last=null;render()">← Belanja Lagi</button></div>
+        <div style="margin-top:16px"><button class="btn sm" onclick="go('shop')">← Belanja Lagi</button></div>
       </div>`;
   }
 
@@ -360,24 +377,29 @@ function cartV() {
     </div>`;
 }
 
-function startTimer() {
+function startTimer(docId) {
   clearInterval(paymentTimer);
-  timeLeft = 120; // 2 menit
+  timeLeft = 120;
+  
+  // Real-time listener ke Firestore untuk pesanan ini
+  if (unsubscribeOrderStatus) unsubscribeOrderStatus();
+  unsubscribeOrderStatus = onSnapshot(doc(db, "orders", docId), (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      if (data.status === 'SUCCESS' || data.status === 'Selesai') {
+        if (last) last.status = 'SUCCESS';
+        clearInterval(paymentTimer);
+        render();
+      }
+    }
+  });
+
   paymentTimer = setInterval(() => {
     if (view !== 'cart' || !last) {
       clearInterval(paymentTimer);
       return;
     }
     
-    // Background sync: Cek database secara berkala di latar belakang
-    loadDB();
-    const currentOrder = (DB.orders || []).find(o => o.code === last.code);
-    if (currentOrder && currentOrder.status === 'Selesai') {
-      render();
-      clearInterval(paymentTimer);
-      return;
-    }
-
     timeLeft--;
     const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
     const s = String(timeLeft % 60).padStart(2, '0');
@@ -388,10 +410,10 @@ function startTimer() {
       clearInterval(paymentTimer);
       toast('Waktu pembayaran habis!');
     }
-  }, 1000); // Cek setiap 1 detik di latar belakang
+  }, 1000);
 }
 
-function checkout() {
+async function checkout() {
   const name = $('cn').value.trim();
   const wa = $('cw').value.replace(/\D/g, '');
   const paymentMethod = $('cpay').value;
@@ -418,13 +440,37 @@ function checkout() {
   const text = `Halo Calaye Store, saya sudah memesan:\n\nKode Order: *${code}*\nNama: ${name}\nWA: ${wa}\n\nRincian Pesanan:\n` + items.map((x, n) => `${n + 1}. ${x.name} (${x.label}) x${x.qty} = ${rp(x.price * x.qty)}`).join('\n') + `\n\n*Total Bayar: ${rp(total)}*\nMetode Pembayaran: *${paymentMethod}*\n\n(Saya akan segera konfirmasi pembayaran). Terima kasih!`;
   const url = 'https://wa.me/' + targetWA + '?text=' + encodeURIComponent(text);
 
-  if (!Array.isArray(DB.orders)) DB.orders = [];
-  DB.orders.unshift({ code, name, wa, items, total, status: 'Menunggu', date: d.toLocaleString('id-ID') });
-  
-  try { localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch (e) {}
+  try {
+    // Kirim pesanan langsung ke Firebase Cloud Firestore secara online
+    const orderData = {
+      code,
+      name,
+      buyerName: name,
+      wa,
+      buyerPhone: wa,
+      items,
+      product: items.map(x => `${x.name} (${x.label})`).join(', '),
+      variant: items.map(x => x.label).join(', '),
+      total,
+      price: total,
+      status: 'PENDING',
+      date: d.toLocaleString('id-ID'),
+      createdAt: d.toISOString()
+    };
 
-  cart = {}; coupon = ''; last = { code, url }; render(); startTimer(); window.open(url, '_blank');
+    const docRef = await addDoc(collection(db, "orders"), orderData);
+    
+    cart = {}; coupon = ''; 
+    last = { code, url, status: 'PENDING', docId: docRef.id }; 
+    render(); 
+    startTimer(docRef.id); 
+    window.open(url, '_blank');
+
+  } catch (err) {
+    alert('Gagal mengirim pesanan ke cloud: ' + err.message);
+  }
 }
+window.checkout = checkout;
 
 function importJSON(e) {
   const file = e.target.files[0];
@@ -443,6 +489,7 @@ function importJSON(e) {
   };
   reader.readAsText(file);
 }
+window.importJSON = importJSON;
 
 render();
 </script>
