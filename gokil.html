@@ -51,7 +51,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0
 .btn.warn{background:var(--warn)}
 
 .badge{padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase}
-.badge.PENDING,.badge.Menunggu{background:rgba(245,158,11,0.15);color:var(--warn)}
+.badge.PENDING,.badge.Menunggu,.badge.Diproses{background:rgba(245,158,11,0.15);color:var(--warn)}
 .badge.SUCCESS,.badge.Selesai{background:rgba(16,185,129,0.15);color:var(--ok)}
 .badge.Dibatalkan{background:rgba(239,68,68,0.15);color:var(--bad)}
 
@@ -101,8 +101,8 @@ th{background:var(--bg);color:var(--mute);font-size:12px;text-transform:uppercas
       <div class="val" id="st-orders">0</div>
     </div>
     <div class="stat-card">
-      <div style="color:var(--mute);font-size:12px">Stok Menipis (&lt;3)</div>
-      <div class="val" id="st-low" style="color:var(--bad)">0 Item</div>
+      <div style="color:var(--mute);font-size:12px">Klaim Garansi Masuk</div>
+      <div class="val" id="st-warranty" style="color:var(--warn)">0</div>
     </div>
   </div>
 
@@ -118,6 +118,7 @@ th{background:var(--bg);color:var(--mute);font-size:12px;text-transform:uppercas
   <!-- Tab Navigasi -->
   <div class="nav-tabs">
     <button class="tab-btn on" onclick="window.setTab('orders',this)">📑 Pesanan Live</button>
+    <button class="tab-btn" onclick="window.setTab('warranty',this)">🛡️ Rekapan Garansi</button>
     <button class="tab-btn" onclick="window.setTab('products',this)">📦 Produk & Deskripsi</button>
     <button class="tab-btn" onclick="window.setTab('coupons',this)">🎟️ Kupon Diskon</button>
     <button class="tab-btn" onclick="window.setTab('announcement',this)">📢 Pengumuman Banner</button>
@@ -131,7 +132,7 @@ th{background:var(--bg);color:var(--mute);font-size:12px;text-transform:uppercas
 <!-- Firebase & Script Logika Admin -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAk3iZuyjIrexLN1UQ-HMW2CuwoOG2Ivhw",
@@ -166,10 +167,12 @@ const seedData = {
 let DB = JSON.parse(JSON.stringify(seedData));
 let currentTab = 'orders';
 let liveOrders = [];
+let liveWarranties = [];
 let knownOrderIds = new Set();
 let isFirstLoad = true;
 let isSyncing = false;
 let orderSearchQuery = '';
+let warrantySearchQuery = '';
 
 // Sinkronisasi Data Konfigurasi Toko
 onSnapshot(doc(db, "store", "config"), (docSnap) => {
@@ -271,6 +274,18 @@ onSnapshot(collection(db, "orders"), (snapshot) => {
   renderTab();
 });
 
+// Realtime Listener Klaim Garansi
+onSnapshot(collection(db, "warranties"), (snapshot) => {
+  let warrants = [];
+  snapshot.forEach((docSnap) => {
+    warrants.push({ id: docSnap.id, ...docSnap.data() });
+  });
+  warrants.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  liveWarranties = warrants;
+  updateStats();
+  if (currentTab === 'warranty') renderTab();
+});
+
 function updateStats() {
   const completed = liveOrders.filter(o => o.status === 'SUCCESS' || o.status === 'Selesai');
   const rev = completed.reduce((a, b) => a + (b.price || b.total || 0), 0);
@@ -290,15 +305,10 @@ function updateStats() {
     });
   });
 
-  let lowStockCount = 0;
-  (DB.products || []).forEach(p => {
-    (p.variants || []).forEach(v => { if ((v.stock || 0) < 3) lowStockCount++; });
-  });
-
   if (document.getElementById('st-rev')) document.getElementById('st-rev').textContent = rp(rev);
   if (document.getElementById('st-profit')) document.getElementById('st-profit').textContent = rp(profit);
   if (document.getElementById('st-orders')) document.getElementById('st-orders').textContent = liveOrders.length;
-  if (document.getElementById('st-low')) document.getElementById('st-low').textContent = lowStockCount + ' Item';
+  if (document.getElementById('st-warranty')) document.getElementById('st-warranty').textContent = liveWarranties.length;
 
   drawChart(completed);
 }
@@ -369,6 +379,7 @@ function renderTab() {
   const app = document.getElementById('app');
   if (!app) return;
   if (currentTab === 'orders') renderOrders(app);
+  else if (currentTab === 'warranty') renderWarranty(app);
   else if (currentTab === 'products') renderProducts(app);
   else if (currentTab === 'coupons') renderCoupons(app);
   else if (currentTab === 'announcement') renderAnnouncement(app);
@@ -385,7 +396,10 @@ function renderOrders(el) {
     <div class="card">
       <div class="row" style="margin-bottom:12px;">
         <h3>Daftar Pesanan Masuk (${liveOrders.length})</h3>
-        <input type="text" placeholder="🔍 Cari kode / nama pemesan..." value="${esc(orderSearchQuery)}" oninput="window.setOrderSearch(this.value)" style="max-width:280px;">
+        <div class="row" style="gap:8px;">
+          <button class="btn ok sm" onclick="window.exportToSpreadsheet('orders')">📊 Export Spreadsheet</button>
+          <input type="text" placeholder="🔍 Cari kode / nama..." value="${esc(orderSearchQuery)}" oninput="window.setOrderSearch(this.value)" style="max-width:220px;">
+        </div>
       </div>
       <div class="table-responsive">
         <table>
@@ -403,7 +417,7 @@ function renderOrders(el) {
             ${filteredOrders.length ? filteredOrders.map((o) => {
               const isSuccess = o.status === 'SUCCESS' || o.status === 'Selesai';
               const isPending = o.status === 'PENDING' || o.status === 'Menunggu';
-              const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : (o.date || '-');
+              const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleDateString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) : (o.date || '-');
 
               return `
               <tr>
@@ -472,7 +486,155 @@ window.sendWA = function(wa, code, status) {
   window.open(`https://wa.me/${fWa}?text=` + encodeURIComponent(text), '_blank');
 };
 
-/* --- TAB 2: PRODUK, GAMBAR & DESKRIPSI --- */
+/* --- TAB BARU: REKAPAN GARANSI --- */
+function renderWarranty(el) {
+  const filteredWarranties = liveWarranties.filter(w => 
+    (w.code || '').toLowerCase().includes(warrantySearchQuery.toLowerCase()) || 
+    (w.customerName || '').toLowerCase().includes(warrantySearchQuery.toLowerCase()) ||
+    (w.accountDetail || '').toLowerCase().includes(warrantySearchQuery.toLowerCase())
+  );
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="row" style="margin-bottom:12px;">
+        <h3>🛡️ Rekapan Klaim Garansi Customer (${liveWarranties.length})</h3>
+        <div class="row" style="gap:8px;">
+          <button class="btn ok sm" onclick="window.exportToSpreadsheet('warranty')">📊 Export Spreadsheet</button>
+          <button class="btn sm" onclick="window.openAddWarrantyModal()">+ Catat Manual Klaim</button>
+          <input type="text" placeholder="🔍 Cari kode / nama / akun..." value="${esc(warrantySearchQuery)}" oninput="window.setWarrantySearch(this.value)" style="max-width:220px;">
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Tgl Beli & Masalah</th>
+              <th>Kode / Customer</th>
+              <th>Detail Akun Bermasalah</th>
+              <th>No WhatsApp</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredWarranties.length ? filteredWarranties.map((w) => {
+              const isDone = w.status === 'Selesai';
+              const buyDate = w.buyDate || '-';
+              const probDate = w.problemDate || (w.createdAt ? new Date(w.createdAt).toLocaleDateString('id-ID') : '-');
+
+              return `
+              <tr>
+                <td>
+                  <div style="font-size:11px;color:var(--mute)">Beli: ${buyDate}</div>
+                  <div style="font-size:11px;color:var(--bad)">Lapor: ${probDate}</div>
+                </td>
+                <td><b>${w.code || '-'}</b><div style="font-size:12px; font-weight:700;">${w.customerName || '-'}</div></td>
+                <td><code>${w.accountDetail || '-'}</code></td>
+                <td><a href="https://wa.me/${(w.customerPhone || '').replace(/\D/g, '')}" target="_blank" style="color:var(--acc); text-decoration:none; font-weight:750;">${w.customerPhone || '-'}</a></td>
+                <td><span class="badge ${isDone ? 'Selesai' : 'Diproses'}">${w.status || 'Diproses'}</span></td>
+                <td>
+                  ${!isDone ? `
+                    <button class="btn ok sm" onclick="window.updateWarrantyStatus('${w.id}', 'Selesai')">Selesaikan</button>
+                  ` : `
+                    <button class="btn warn sm" onclick="window.updateWarrantyStatus('${w.id}', 'Diproses')">Proses Ulang</button>
+                  `}
+                  <button class="btn del sm" onclick="window.deleteWarranty('${w.id}')">Hapus</button>
+                </td>
+              </tr>`;
+            }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--mute);padding:24px;">Belum ada rekapan garansi yang tercatat.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+window.setWarrantySearch = (q) => {
+  warrantySearchQuery = q;
+  renderWarranty(document.getElementById('app'));
+};
+
+window.updateWarrantyStatus = async function(id, status) {
+  try {
+    await updateDoc(doc(db, "warranties", id), { status: status });
+    showToast('Status garansi diperbarui!');
+  } catch(e) { alert('Gagal: ' + e.message); }
+};
+
+window.deleteWarranty = async function(id) {
+  if (confirm('Hapus data rekapan garansi ini?')) {
+    try {
+      await deleteDoc(doc(db, "warranties", id));
+      showToast('Data garansi dihapus.');
+    } catch(e) { alert('Gagal: ' + e.message); }
+  }
+};
+
+window.openAddWarrantyModal = async function() {
+  const code = prompt("Masukkan Kode Pemesanan / Invoice:");
+  if (!code) return;
+  const customerName = prompt("Nama Customer:");
+  const customerPhone = prompt("Nomor WhatsApp Customer (cth: 08123...):");
+  const buyDate = prompt("Tanggal Pembelian (cth: 01 Nov 2026):");
+  const accountDetail = prompt("Detail Akun Bermasalah (Email / Username / Keterangan):");
+  
+  if (!customerName || !accountDetail) return alert("Nama dan Detail akun wajib diisi!");
+
+  try {
+    await addDoc(collection(db, "warranties"), {
+      code,
+      customerName,
+      customerPhone: customerPhone || '-',
+      buyDate: buyDate || '-',
+      problemDate: new Date().toLocaleDateString('id-ID'),
+      accountDetail,
+      status: 'Diproses',
+      createdAt: new Date().toISOString()
+    });
+    showToast('Klaim garansi berhasil dicatat!');
+  } catch(e) {
+    alert('Gagal mencatat: ' + e.message);
+  }
+};
+
+/* --- FITUR EKSPOR KE GOOGLE SPREADSHEET (CSV/TSV Clipboard) --- */
+window.exportToSpreadsheet = function(type) {
+  let header = "";
+  let rows = [];
+
+  if (type === 'orders') {
+    header = "Kode Pesanan\tTanggal\tNama Pemesan\tNo WhatsApp\tProduk\tTotal Bayar\tStatus\n";
+    rows = liveOrders.map(o => {
+      const prods = (o.items || []).map(x => `${x.name} (${x.label}) x${x.qty}`).join(', ') || o.product || '-';
+      const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleString('id-ID') : (o.date || '-');
+      return `${o.code || '-'}\t${dateStr}\t${o.buyerName || o.name || '-'}\t${o.buyerPhone || o.wa || '-'}\t"${prods}"\t${o.price || o.total || 0}\t${o.status || '-'}`;
+    });
+  } else if (type === 'warranty') {
+    header = "Tanggal Beli\tTanggal Bermasalah\tKode Pesanan\tNama Customer\tNo WhatsApp\tDetail Akun\tStatus\n";
+    rows = liveWarranties.map(w => {
+      return `${w.buyDate || '-'}\t${w.problemDate || '-'}\t${w.code || '-'}\t${w.customerName || '-'}\t${w.customerPhone || '-'}\t"${w.accountDetail || '-'}"\t${w.status || '-'}`;
+    });
+  }
+
+  const tsvContent = header + rows.join('\n');
+  
+  // Salin otomatis ke clipboard agar bisa langsung di-Paste (Ctrl+V) ke Google Sheets / Excel
+  navigator.clipboard.writeText(tsvContent).then(() => {
+    showToast('📊 Berhasil disalin! Buka Google Spreadsheet, klik cell A1, lalu tekan Ctrl+V.');
+  }).catch(err => {
+    // Fallback download file CSV jika clipboard diblokir browser
+    const blob = new Blob([tsvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `calayestore_${type}_export.tsv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showToast('File Spreadsheet berhasil diunduh!');
+  });
+};
+
+/* --- TAB 3: PRODUK, GAMBAR & DESKRIPSI --- */
 function renderProducts(el) {
   el.innerHTML = `
     <div class="row" style="margin-bottom:14px;">
@@ -537,7 +699,7 @@ window.delVar = (pid, vid) => {
   if(p) { p.variants = p.variants.filter(v => v.id !== vid); save(); }
 };
 
-/* --- TAB 3: KUPON DISKON --- */
+/* --- TAB 4: KUPON DISKON --- */
 function renderCoupons(el) {
   el.innerHTML = `
     <div class="card">
@@ -581,7 +743,7 @@ window.updCouponVal = (i, val) => { DB.coupons[i].val = val; save(); };
 window.delCoupon = (i) => { DB.coupons.splice(i, 1); save(); };
 window.addCoupon = () => { DB.coupons.push({ code: 'PROMO', type: 'percent', val: 10 }); save(); };
 
-/* --- TAB 4: PENGUMUMAN & BANNER --- */
+/* --- TAB 5: PENGUMUMAN & BANNER --- */
 function renderAnnouncement(el) {
   const ann = DB.announcement || { text: '', active: true };
   el.innerHTML = `
@@ -613,7 +775,7 @@ window.saveAnnouncement = () => {
   showToast('Banner pengumuman diperbarui ke Cloud!');
 };
 
-/* --- TAB 5: PENGATURAN --- */
+/* --- TAB 6: PENGATURAN --- */
 function renderSettings(el) {
   el.innerHTML = `
     <div class="card" style="max-width:500px">
