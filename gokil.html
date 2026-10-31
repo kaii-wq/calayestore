@@ -62,233 +62,476 @@ th{background:var(--bg);color:var(--mute);font-size:12px;text-transform:uppercas
   box-shadow:0 10px 30px rgba(0,0,0,0.2);animation:slideIn .3s ease;
 }
 @keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.sp{margin-top:14px}
+.low-stock{background:rgba(239,68,68,0.03);border-left:4px solid var(--bad)}
+.prod-img-preview{width:45px;height:45px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#fff}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div>
-      <h1>👑 Calaye Admin Pro Dashboard</h1>
-      <small id="syncStatus">🟢 Terhubung ke Firebase Cloud (Real-time)</small>
+      <h1>👑 Calaye Admin Pro</h1>
+      <small>🟢 Firebase Real-Time Aktif</small>
     </div>
     <div class="row">
-      <button class="btn sm warn" onclick="testBeep()">🔔 Tes Suara Beep</button>
+      <button class="btn warn sm" onclick="window.testBeep()">🔔 Tes Beep</button>
+      <button class="btn ok sm" onclick="window.exportData()">📥 Backup JSON</button>
+      <button class="btn sm" onclick="document.getElementById('impFile').click()">📤 Restore</button>
+      <input type="file" id="impFile" style="display:none" accept=".json" onchange="window.importData(event)">
     </div>
   </header>
 
   <!-- Financial Statistics -->
   <div class="grid-4">
     <div class="stat-card">
-      <div style="color:var(--mute);font-size:12px">Total Omset (Lunas)</div>
+      <div style="color:var(--mute);font-size:12px">Total Omset</div>
       <div class="val ok" id="st-rev">Rp0</div>
     </div>
     <div class="stat-card">
-      <div style="color:var(--mute);font-size:12px">Pesanan Masuk</div>
-      <div class="val" id="st-orders" style="color:var(--acc)">0</div>
+      <div style="color:var(--mute);font-size:12px">Estimasi Profit</div>
+      <div class="val" id="st-profit" style="color:var(--acc)">Rp0</div>
     </div>
     <div class="stat-card">
-      <div style="color:var(--mute);font-size:12px">Menunggu Konfirmasi</div>
-      <div class="val" id="st-pending" style="color:var(--warn)">0</div>
+      <div style="color:var(--mute);font-size:12px">Total Pesanan</div>
+      <div class="val" id="st-orders">0</div>
     </div>
     <div class="stat-card">
-      <div style="color:var(--mute);font-size:12px">Status Koneksi</div>
-      <div class="val ok" style="font-size:16px;margin-top:10px">REALTIME</div>
+      <div style="color:var(--mute);font-size:12px">Stok Menipis (&lt;3)</div>
+      <div class="val" id="st-low" style="color:var(--bad)">0 Item</div>
     </div>
   </div>
 
   <!-- Navigation Tabs -->
   <div class="nav-tabs">
-    <button class="tab-btn on" onclick="setTab('orders',this)">📑 Kelola Pesanan Live</button>
+    <button class="tab-btn on" onclick="window.setTab('orders',this)">📑 Pesanan Live</button>
+    <button class="tab-btn" onclick="window.setTab('products',this)">📦 Stok & Gambar</button>
+    <button class="tab-btn" onclick="window.setTab('coupons',this)">🎟️ Kupon Diskon</button>
+    <button class="tab-btn" onclick="window.setTab('settings',this)">⚙️ Pengaturan</button>
   </div>
 
   <main id="app"></main>
 </div>
 <div id="toast-container"></div>
 
-<!-- Firebase SDK via CDN -->
+<!-- Firebase & Logic Script -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  // Config Firebase milik pengguna
-  const firebaseConfig = {
-    apiKey: "AIzaSyAk3iZuyjIrexLN1UQ-HMW2CuwoOG2Ivhw",
-    authDomain: "calayestore.firebaseapp.com",
-    projectId: "calayestore",
-    storageBucket: "calayestore.appspot.com",
-    messagingSenderId: "1053043880481",
-    appId: "1:1053043880481:web:bb5886b0ac92ec5338e960"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyAk3iZuyjIrexLN1UQ-HMW2CuwoOG2Ivhw",
+  authDomain: "calayestore.firebaseapp.com",
+  projectId: "calayestore",
+  storageBucket: "calayestore.appspot.com",
+  messagingSenderId: "1053043880481",
+  appId: "1:1053043880481:web:bb5886b0ac92ec5338e960"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  let currentOrders = [];
-  let knownOrderIds = new Set();
-  let isFirstLoad = true;
-
-  function rp(n) { return 'Rp' + Number(n || 0).toLocaleString('id-ID'); }
-
-  function showToast(msg) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    const div = document.createElement('div');
-    div.className = 'toast';
-    div.textContent = msg;
-    container.appendChild(div);
-    setTimeout(() => div.remove(), 4000);
-  }
-
-  // Notifikasi Suara Beep Otomatis (Web Audio API)
-  window.playNotificationSound = function() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, ctx.currentTime); // 880Hz
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.5);
-    } catch(e) {
-      console.log('Audio error:', e);
+const DB_KEY = 'calaye_store_db_v5';
+const seedData = () => ({
+  settings: { name: 'Calaye Store', wa: '6281234567890' },
+  coupons: [
+    { code: 'CALAYE20', type: 'percent', val: 10 },
+    { code: 'HEMAT5K', type: 'fixed', val: 5000 }
+  ],
+  orders: [],
+  products: [
+    {
+      id: 'p1', name: 'Canva Pro', cat: 'Desain', img: 'https://i.imgur.com/7k123ab.png', status: 'tersedia',
+      variants: [
+        { id: 'v1', label: '1 Bulan', price: 10000, cost: 4000, stock: 10 },
+        { id: 'v2', label: '1 Tahun', price: 60000, cost: 20000, stock: 4 }
+      ]
     }
-  };
+  ]
+});
 
-  window.testBeep = function() {
+let DB;
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) DB = JSON.parse(raw);
+  } catch(e) {}
+  if (!DB || !Array.isArray(DB.products)) {
+    DB = seedData();
+    saveToStorage();
+  }
+}
+loadDB();
+
+let currentTab = 'orders';
+let liveOrders = [];
+let knownOrderIds = new Set();
+let isFirstLoad = true;
+
+function saveToStorage() {
+  localStorage.setItem(DB_KEY, JSON.stringify(DB));
+}
+
+function save() {
+  saveToStorage();
+  updateStats();
+  renderTab();
+}
+
+function rp(n) { return 'Rp' + Number(n || 0).toLocaleString('id-ID'); }
+
+function showToast(msg) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'toast';
+  div.textContent = msg;
+  container.appendChild(div);
+  setTimeout(() => div.remove(), 4000);
+}
+
+window.playNotificationSound = function() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+  } catch(e) {}
+};
+
+window.testBeep = function() {
+  window.playNotificationSound();
+  showToast('🔔 Suara beep aktif!');
+};
+
+onSnapshot(collection(db, "orders"), (snapshot) => {
+  let orders = [];
+  let newOrderDetected = false;
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const id = docSnap.id;
+    orders.push({ id, ...data });
+
+    if (!knownOrderIds.has(id)) {
+      knownOrderIds.add(id);
+      if (!isFirstLoad) newOrderDetected = true;
+    }
+  });
+
+  if (newOrderDetected) {
     window.playNotificationSound();
-    showToast('🔔 Suara notifikasi aktif!');
-  };
+    showToast('🔔 Pesanan baru masuk!');
+  }
+  isFirstLoad = false;
 
-  // Listen Real-time Firestore
-  onSnapshot(collection(db, "orders"), (snapshot) => {
-    let orders = [];
-    let hasNew = false;
+  orders.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
+  liveOrders = orders;
+  DB.orders = orders;
 
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      const id = docSnap.id;
-      orders.push({ id, ...data });
+  updateStats();
+  renderTab();
+});
 
-      if (!knownOrderIds.has(id)) {
-        knownOrderIds.add(id);
-        if (!isFirstLoad) {
-          hasNew = true;
+function updateStats() {
+  loadDB();
+  const completed = liveOrders.filter(o => o.status === 'SUCCESS' || o.status === 'Selesai');
+  const rev = completed.reduce((a, b) => a + (b.price || b.total || 0), 0);
+  
+  let profit = 0;
+  completed.forEach(o => {
+    (o.items || []).forEach(item => {
+      const prod = (DB.products || []).find(p => p.id === item.pid || p.name === item.name);
+      if (prod && prod.variants) {
+        const v = prod.variants.find(x => x.label === item.label || x.id === item.vid);
+        if (v && v.cost !== undefined) {
+          profit += ((item.price || v.price) - v.cost) * (item.qty || 1);
+        } else {
+          profit += (item.price || 0) * 0.5 * (item.qty || 1);
         }
       }
     });
-
-    if (hasNew) {
-      window.playNotificationSound();
-      showToast('🔔 Ada pesanan baru masuk dari pembeli!');
-    }
-    isFirstLoad = false;
-
-    // Urutkan pesanan terbaru di paling atas
-    orders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-    currentOrders = orders;
-
-    updateStats();
-    renderOrders();
   });
 
-  function updateStats() {
-    const completed = currentOrders.filter(o => o.status === 'SUCCESS' || o.status === 'Selesai');
-    const rev = completed.reduce((a, b) => a + (b.price || b.total || 0), 0);
-    const pending = currentOrders.filter(o => o.status === 'PENDING' || o.status === 'Menunggu').length;
+  let lowStockCount = 0;
+  (DB.products || []).forEach(p => {
+    (p.variants || []).forEach(v => { if ((v.stock || 0) < 3) lowStockCount++; });
+  });
 
-    document.getElementById('st-rev').textContent = rp(rev);
-    document.getElementById('st-orders').textContent = currentOrders.length;
-    document.getElementById('st-pending').textContent = pending;
+  if (document.getElementById('st-rev')) document.getElementById('st-rev').textContent = rp(rev);
+  if (document.getElementById('st-profit')) document.getElementById('st-profit').textContent = rp(profit);
+  if (document.getElementById('st-orders')) document.getElementById('st-orders').textContent = liveOrders.length;
+  if (document.getElementById('st-low')) document.getElementById('st-low').textContent = lowStockCount + ' Item';
+}
+
+function setTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  if (el) el.classList.add('on');
+  renderTab();
+}
+window.setTab = setTab;
+
+function renderTab() {
+  loadDB();
+  const app = document.getElementById('app');
+  if (!app) return;
+  if (currentTab === 'orders') renderOrders(app);
+  else if (currentTab === 'products') renderProducts(app);
+  else if (currentTab === 'coupons') renderCoupons(app);
+  else if (currentTab === 'settings') renderSettings(app);
+}
+
+function renderOrders(el) {
+  const orders = liveOrders;
+  if (!orders.length) {
+    el.innerHTML = `<div class="card" style="text-align:center; color:var(--mute);">Belum ada pesanan masuk.</div>`;
+    return;
   }
+  el.innerHTML = `
+    <div class="card">
+      <h3>Daftar Pesanan Masuk</h3>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Kode / Waktu</th>
+              <th>Pemesan</th>
+              <th>Produk</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orders.map((o) => {
+              const isSuccess = o.status === 'SUCCESS' || o.status === 'Selesai';
+              const isPending = o.status === 'PENDING' || o.status === 'Menunggu';
+              const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : (o.date || '-');
 
-  function renderOrders() {
-    const app = document.getElementById('app');
-    if (!app) return;
-
-    if (!currentOrders.length) {
-      app.innerHTML = `<div class="card" style="text-align:center; color:var(--mute);">Belum ada pesanan masuk di Cloud Firebase.</div>`;
-      return;
-    }
-
-    app.innerHTML = `
-      <div class="card">
-        <h3>Daftar Pesanan Live (Firebase)</h3>
-        <div class="table-responsive">
-          <table>
-            <thead>
+              return `
               <tr>
-                <th>Waktu</th>
-                <th>Pemesan</th>
-                <th>Detail Produk & Varian</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Aksi Admin</th>
+                <td><b>${o.code || '-'}</b><div style="font-size:11px;color:var(--mute)">${dateStr}</div></td>
+                <td><b>${o.buyerName || o.name || '-'}</b><div style="font-size:11px;color:var(--mute)">${o.buyerPhone || o.wa || '-'}</div></td>
+                <td>${o.items ? o.items.map(x => `<div>• ${x.name} (${x.label}) ×${x.qty}</div>`).join('') : `<div>• ${o.product || '-'}</div>`}</td>
+                <td><b>${rp(o.price || o.total)}</b></td>
+                <td><span class="badge ${isSuccess ? 'Selesai' : (isPending ? 'Menunggu' : 'Dibatalkan')}">${isSuccess ? 'LUNAS' : (isPending ? 'PENDING' : o.status)}</span></td>
+                <td>
+                  ${isPending ? `
+                    <button class="btn ok sm" onclick="window.updateOrderStatus('${o.id}','SUCCESS')">Konfirmasi</button>
+                    <button class="btn del sm" onclick="window.updateOrderStatus('${o.id}','Dibatalkan')">Tolak</button>
+                  ` : `
+                    <button class="btn sm" onclick="window.sendWA('${o.buyerPhone || o.wa}','${o.code}','${o.status}')">WA</button>
+                    <button class="btn del sm" onclick="window.deleteOrder('${o.id}')">Hapus</button>
+                  `}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              ${currentOrders.map((o) => {
-                const isPending = o.status === 'PENDING' || o.status === 'Menunggu';
-                const isSuccess = o.status === 'SUCCESS' || o.status === 'Selesai';
-                const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '-';
+            `}).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
 
-                return `
-                <tr>
-                  <td><b>${dateStr}</b></td>
-                  <td><b>${o.buyerName || o.name || '-'}</b><div style="font-size:11px;color:var(--mute)">${o.buyerPhone || o.wa || '-'}</div></td>
-                  <td><b>${o.product || '-'}</b><div style="font-size:11px;color:var(--mute)">Varian: ${o.variant || o.label || '-'}</div></td>
-                  <td><b>${rp(o.price || o.total)}</b></td>
-                  <td><span class="badge ${isSuccess ? 'Selesai' : (isPending ? 'Menunggu' : 'Dibatalkan')}">${isSuccess ? 'LUNAS' : (isPending ? 'PENDING' : o.status)}</span></td>
-                  <td>
-                    ${isPending ? `
-                      <button class="btn ok sm" onclick="window.confirmOrder('${o.id}')">Konfirmasi (Sudah Bayar)</button>
-                      <button class="btn del sm" onclick="window.cancelOrder('${o.id}')">Tolak</button>
-                    ` : `
-                      <button class="btn sm" onclick="window.sendWA('${o.buyerPhone || o.wa}','${o.product}','${o.status}')">Balas WA</button>
-                      <button class="btn del sm" onclick="window.deleteOrder('${o.id}')">Hapus</button>
-                    `}
-                  </td>
-                </tr>
-              `}).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>`;
-  }
-
-  // Fungsi Aksi Admin (Update Firestore)
-  window.confirmOrder = async function(id) {
-    try {
-      await updateDoc(doc(db, "orders", id), { status: 'SUCCESS' });
-      showToast('Pesanan berhasil dikonfirmasi (Lunas)!');
-    } catch(e) { alert('Gagal update: ' + e.message); }
-  };
-
-  window.cancelOrder = async function(id) {
-    try {
-      await updateDoc(doc(db, "orders", id), { status: 'Dibatalkan' });
-      showToast('Pesanan dibatalkan.');
-    } catch(e) { alert('Gagal update: ' + e.message); }
-  };
-
-  window.deleteOrder = async function(id) {
-    if (confirm('Hapus riwayat pesanan ini dari Firebase?')) {
-      try {
-        await deleteDoc(doc(db, "orders", id));
-        showToast('Pesanan dihapus dari Cloud.');
-      } catch(e) { alert('Gagal hapus: ' + e.message); }
+window.updateOrderStatus = async function(id, status) {
+  try {
+    await updateDoc(doc(db, "orders", id), { status: status });
+    if (status === 'SUCCESS') {
+      const order = liveOrders.find(o => o.id === id);
+      if (order && order.items) {
+        order.items.forEach(item => {
+          (DB.products || []).forEach(p => {
+            (p.variants || []).forEach(v => {
+              if (v.id === item.vid || (p.name === item.name && v.label === item.label)) {
+                v.stock = Math.max(0, (v.stock || 0) - item.qty);
+              }
+            });
+          });
+        });
+        saveToStorage();
+      }
     }
-  };
+    showToast('Status pesanan diperbarui!');
+  } catch(e) { alert('Gagal: ' + e.message); }
+};
 
-  window.sendWA = function(wa, prod, status) {
-    if(!wa) return alert('Nomor WA tidak tersedia.');
-    const formattedWa = wa.replace(/\D/g, '');
-    const text = `Halo, pesanan produk *${prod}* Anda saat ini statusnya: *${status === 'SUCCESS' ? 'SELESAI / LUNAS' : status}*. Terima kasih telah berbelanja di Calaye Store!`;
-    window.open(`https://wa.me/${formattedWa}?text=` + encodeURIComponent(text), '_blank');
+window.deleteOrder = async function(id) {
+  if (confirm('Hapus pesanan ini?')) {
+    try {
+      await deleteDoc(doc(db, "orders", id));
+      showToast('Pesanan dihapus.');
+    } catch(e) { alert('Gagal: ' + e.message); }
+  }
+};
+
+window.sendWA = function(wa, code, status) {
+  if (!wa) return alert('Nomor WA kosong.');
+  const fWa = wa.replace(/\D/g, '');
+  const text = `Halo, pesanan *${code}* statusnya saat ini: *${status === 'SUCCESS' ? 'LUNAS' : status}*. Terima kasih di Calaye Store!`;
+  window.open(`https://wa.me/${fWa}?text=` + encodeURIComponent(text), '_blank');
+};
+
+/* --- TAB 2: PRODUK & GAMBAR (STOK GAMPANG) --- */
+function renderProducts(el) {
+  el.innerHTML = `
+    <div class="row" style="margin-bottom:14px;">
+      <h3>Manajemen Produk, Gambar & Stok</h3>
+      <button class="btn" onclick="window.addNewProduct()">+ Tambah Produk</button>
+    </div>
+    ${(DB.products || []).map((p, pi) => `
+      <div class="card ${(p.variants || []).some(v => (v.stock || 0) < 3) ? 'low-stock' : ''}">
+        <div class="row" style="margin-bottom:12px; gap:8px;">
+          <img src="${p.img || 'https://via.placeholder.com/45'}" class="prod-img-preview" alt="Foto">
+          <input style="flex:2; min-width:140px;" placeholder="Nama Produk" value="${esc(p.name)}" onchange="window.updProd(${pi},'name',this.value)">
+          <input style="flex:1; min-width:100px;" placeholder="Kategori" value="${esc(p.cat)}" onchange="window.updProd(${pi},'cat',this.value)">
+          <button class="btn del sm" onclick="window.delProd('${p.id}')">Hapus Produk</button>
+        </div>
+        <div style="margin-bottom:10px;">
+          <input style="width:100%; font-size:12px;" placeholder="Link URL Gambar / Foto (contoh: https://i.imgur.com/xxx.png)" value="${esc(p.img || '')}" onchange="window.updProd(${pi},'img',this.value)">
+        </div>
+        
+        <div style="font-size:12px;font-weight:700;color:var(--mute);margin-bottom:6px">Varian, Harga Jual, Modal & Sisa Stok:</div>
+        ${(p.variants || []).map((v, vi) => `
+          <div class="row" style="margin-bottom:6px; background:var(--bg); padding:8px; border-radius:12px;">
+            <input style="flex:2; min-width:110px;" placeholder="Nama Varian (misal: 1 Bulan)" value="${esc(v.label)}" onchange="window.updVar('${p.id}','${v.id}','label',this.value)">
+            <input style="flex:1; min-width:90px;" type="number" placeholder="Harga Jual" value="${v.price}" onchange="window.updVar('${p.id}','${v.id}','price',+this.value)">
+            <input style="flex:1; min-width:90px;" type="number" placeholder="Modal" value="${v.cost || 0}" onchange="window.updVar('${p.id}','${v.id}','cost',+this.value)">
+            <input style="flex:1; min-width:70px;" type="number" placeholder="Stok" value="${v.stock}" onchange="window.updVar('${p.id}','${v.id}','stock',+this.value)">
+            <button class="btn del sm" onclick="window.delVar('${p.id}','${v.id}')">✕</button>
+          </div>
+        `).join('')}
+        <button class="btn sm sp" onclick="window.addVar('${p.id}')">+ Tambah Varian</button>
+      </div>
+    `).join('')}`;
+}
+
+const esc = s => String(s || '').replace(/"/g, '&quot;');
+window.updProd = (pi, field, val) => { DB.products[pi][field] = val; save(); };
+window.updVar = (pid, vid, field, val) => {
+  const p = DB.products.find(x => x.id === pid);
+  if(p) { const v = p.variants.find(x => x.id === vid); if(v) { v[field] = val; save(); } }
+};
+window.addNewProduct = () => {
+  loadDB();
+  DB.products.unshift({
+    id: 'p' + Math.random().toString(36).slice(2, 7),
+    name: 'Produk Baru', cat: 'Lainnya', img: '', status: 'tersedia',
+    variants: [{ id: 'v' + Math.random().toString(36).slice(2, 7), label: '1 Bulan', price: 15000, cost: 5000, stock: 10 }]
+  });
+  save();
+};
+window.delProd = (id) => { if(confirm('Hapus produk ini?')) { DB.products = DB.products.filter(p => p.id !== id); save(); } };
+window.addVar = (pid) => {
+  const p = DB.products.find(x => x.id === pid);
+  if(p) { p.variants.push({ id: 'v' + Math.random().toString(36).slice(2, 7), label: 'Varian Baru', price: 10000, cost: 3000, stock: 5 }); save(); }
+};
+window.delVar = (pid, vid) => {
+  const p = DB.products.find(x => x.id === pid);
+  if(p) { p.variants = p.variants.filter(v => v.id !== vid); save(); }
+};
+
+/* --- TAB 3: KELOLA KUPON --- */
+function renderCoupons(el) {
+  el.innerHTML = `
+    <div class="card">
+      <div class="row">
+        <h3>Kode Kupon Diskon</h3>
+        <button class="btn sm" onclick="window.addCoupon()">+ Buat Kupon</button>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Kode</th>
+              <th>Tipe</th>
+              <th>Potongan</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(DB.coupons || []).map((c, i) => `
+              <tr>
+                <td><b><input value="${c.code}" onchange="DB.coupons[${i}].code=this.value.toUpperCase();save()"></b></td>
+                <td>
+                  <select onchange="DB.coupons[${i}].type=this.value;save()">
+                    <option value="percent" ${c.type==='percent'?'selected':''}>Persen (%)</option>
+                    <option value="fixed" ${c.type==='fixed'?'selected':''}>Nominal (Rp)</option>
+                  </select>
+                </td>
+                <td><input type="number" value="${c.val}" onchange="DB.coupons[${i}].val=+this.value;save()"></td>
+                <td><button class="btn del sm" onclick="DB.coupons.splice(${i},1);save()">Hapus</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+window.addCoupon = () => { DB.coupons.push({ code: 'PROMO', type: 'percent', val: 10 }); save(); };
+
+/* --- TAB 4: PENGATURAN --- */
+function renderSettings(el) {
+  el.innerHTML = `
+    <div class="card" style="max-width:500px">
+      <h3>Pengaturan Toko</h3>
+      <label style="font-size:12px;color:var(--mute)">Nama Toko</label>
+      <input class="sp" id="s-name" value="${DB.settings.name}" style="width:100%">
+      
+      <label style="font-size:12px;color:var(--mute);display:block;margin-top:10px">Nomor WhatsApp Admin (628...)</label>
+      <input class="sp" id="s-wa" value="${DB.settings.wa}" style="width:100%">
+      
+      <button class="btn ok sp" style="width:100%" onclick="window.saveSet()">Simpan Pengaturan</button>
+    </div>`;
+}
+window.saveSet = () => {
+  loadDB();
+  DB.settings.name = document.getElementById('s-name').value.trim();
+  DB.settings.wa = document.getElementById('s-wa').value.replace(/\D/g, '');
+  save();
+  showToast('Pengaturan disimpan!');
+};
+
+/* --- BACKUP & RESTORE JSON --- */
+window.exportData = () => {
+  loadDB();
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB, null, 2));
+  const dl = document.createElement('a');
+  dl.setAttribute("href", dataStr);
+  dl.setAttribute("download", "calayestore_backup.json");
+  document.body.appendChild(dl);
+  dl.click();
+  dl.remove();
+};
+
+window.importData = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const parsed = JSON.parse(evt.target.result);
+      if (parsed && parsed.products) {
+        DB = parsed;
+        saveToStorage();
+        updateStats();
+        renderTab();
+        showToast('Restore data berhasil!');
+      } else { alert('Format JSON salah.'); }
+    } catch(err) { alert('Gagal baca file.'); }
   };
+  reader.readAsText(file);
+};
+
+updateStats();
+renderTab();
 </script>
 </body>
 </html>
