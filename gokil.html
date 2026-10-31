@@ -74,13 +74,11 @@ th{background:var(--bg);color:var(--mute);font-size:12px;text-transform:uppercas
   <header>
     <div>
       <h1>👑 Calaye Admin Pro</h1>
-      <small>🟢 Firebase Real-Time & Grafik Aktif</small>
+      <small>🟢 Cloud Sync & Real-Time Aktif</small>
     </div>
     <div class="row">
       <button class="btn warn sm" onclick="window.testBeep()">🔔 Tes Beep</button>
       <button class="btn ok sm" onclick="window.exportData()">📥 Backup JSON</button>
-      <button class="btn sm" onclick="document.getElementById('impFile').click()">📤 Restore</button>
-      <input type="file" id="impFile" style="display:none" accept=".json" onchange="window.importData(event)">
     </div>
   </header>
 
@@ -104,7 +102,7 @@ th{background:var(--bg);color:var(--mute);font-size:12px;text-transform:uppercas
     </div>
   </div>
 
-  <!-- Grafik Batang Penjualan (Canvas) -->
+  <!-- Grafik Batang Penjualan -->
   <div class="chart-container">
     <div class="row" style="margin-bottom:10px;">
       <h3 style="margin:0; font-size:15px;">📊 Grafik Omset 7 Hari Terakhir</h3>
@@ -128,7 +126,7 @@ th{background:var(--bg);color:var(--mute);font-size:12px;text-transform:uppercas
 <!-- Firebase & Script Logika -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAk3iZuyjIrexLN1UQ-HMW2CuwoOG2Ivhw",
@@ -142,14 +140,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const DB_KEY = 'calaye_store_db_v5';
-const seedData = () => ({
+const seedData = {
   settings: { name: 'Calaye Store', wa: '6281234567890' },
   coupons: [
     { code: 'CALAYE20', type: 'percent', val: 10 },
     { code: 'HEMAT5K', type: 'fixed', val: 5000 }
   ],
-  orders: [],
   products: [
     {
       id: 'p1', name: 'Canva Pro', cat: 'Desain', img: '', status: 'tersedia',
@@ -159,32 +155,43 @@ const seedData = () => ({
       ]
     }
   ]
-});
+};
 
-let DB;
-function loadDB() {
-  try {
-    const raw = localStorage.getItem(DB_KEY);
-    if (raw) DB = JSON.parse(raw);
-  } catch(e) {}
-  if (!DB || !Array.isArray(DB.products)) {
-    DB = seedData();
-    saveToStorage();
-  }
-}
-loadDB();
-
+let DB = seedData();
 let currentTab = 'orders';
 let liveOrders = [];
 let knownOrderIds = new Set();
 let isFirstLoad = true;
 
-function saveToStorage() {
-  localStorage.setItem(DB_KEY, JSON.stringify(DB));
+// Sinkronisasi Data Toko (Produk, Kupon, Pengaturan) ke Firebase secara Real-Time
+onSnapshot(doc(db, "store", "config"), (docSnap) => {
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    if (data.products) DB.products = data.products;
+    if (data.coupons) DB.coupons = data.coupons;
+    if (data.settings) DB.settings = data.settings;
+    updateStats();
+    renderTab();
+  } else {
+    // Jika belum ada di firebase, buat dokumen awal
+    setDoc(doc(db, "store", "config"), seedData());
+  }
+});
+
+async function saveToCloud() {
+  try {
+    await setDoc(doc(db, "store", "config"), {
+      products: DB.products,
+      coupons: DB.coupons,
+      settings: DB.settings
+    });
+  } catch(e) {
+    console.error("Gagal simpan ke cloud:", e);
+  }
 }
 
 function save() {
-  saveToStorage();
+  saveToCloud();
   updateStats();
   renderTab();
 }
@@ -222,6 +229,7 @@ window.testBeep = function() {
   showToast('🔔 Suara beep aktif!');
 };
 
+// Listener Pesanan Masuk
 onSnapshot(collection(db, "orders"), (snapshot) => {
   let orders = [];
   let newOrderDetected = false;
@@ -245,14 +253,12 @@ onSnapshot(collection(db, "orders"), (snapshot) => {
 
   orders.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
   liveOrders = orders;
-  DB.orders = orders;
 
   updateStats();
   renderTab();
 });
 
 function updateStats() {
-  loadDB();
   const completed = liveOrders.filter(o => o.status === 'SUCCESS' || o.status === 'Selesai');
   const rev = completed.reduce((a, b) => a + (b.price || b.total || 0), 0);
   
@@ -284,14 +290,12 @@ function updateStats() {
   drawChart(completed);
 }
 
-// Fungsi Menggambar Grafik Batang ke Canvas
 function drawChart(completedOrders) {
   const canvas = document.getElementById('salesChart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Ambil data 7 hari terakhir
   const days = [];
   const mapData = {};
   for (let i = 6; i >= 0; i--) {
@@ -313,7 +317,7 @@ function drawChart(completedOrders) {
   });
 
   const values = days.map(d => mapData[d.key]);
-  const maxVal = Math.max(...values, 100000); // minimal skala
+  const maxVal = Math.max(...values, 100000);
 
   const w = canvas.width = canvas.parentElement.clientWidth - 40;
   const h = canvas.height = 140;
@@ -325,12 +329,10 @@ function drawChart(completedOrders) {
     const x = i * (barWidth + 12) + 10;
     const y = h - barH - 20;
 
-    // Gambar Batang
     ctx.fillStyle = '#8b5cf6';
     ctx.roundRect ? ctx.roundRect(x, y, barWidth, barH, [6, 6, 0, 0]) : ctx.rect(x, y, barWidth, barH);
     ctx.fill();
 
-    // Label Hari / Tanggal
     ctx.fillStyle = '#64748b';
     ctx.font = '10px "Plus Jakarta Sans", sans-serif';
     ctx.textAlign = 'center';
@@ -347,7 +349,6 @@ function setTab(tab, el) {
 window.setTab = setTab;
 
 function renderTab() {
-  loadDB();
   const app = document.getElementById('app');
   if (!app) return;
   if (currentTab === 'orders') renderOrders(app);
@@ -422,7 +423,7 @@ window.updateOrderStatus = async function(id, status) {
             });
           });
         });
-        saveToStorage();
+        save();
       }
     }
     showToast('Status pesanan diperbarui!');
@@ -441,7 +442,7 @@ window.deleteOrder = async function(id) {
 window.sendWA = function(wa, code, status) {
   if (!wa) return alert('Nomor WA kosong.');
   const fWa = wa.replace(/\D/g, '');
-  const text = `Halo, pesanan *${code}* statusnya saat ini: *${status === 'SUCCESS' ? 'LUNAS' : status}*. Terima kasih di Calaye Store!`;
+  const text = `Halo, pesanan *${code}* statusnya saat ini: *${status === 'SUCCESS' ? 'LUNAS' : status}*. Terima kasih di ${DB.settings.name}!`;
   window.open(`https://wa.me/${fWa}?text=` + encodeURIComponent(text), '_blank');
 };
 
@@ -486,7 +487,6 @@ window.updVar = (pid, vid, field, val) => {
   if(p) { const v = p.variants.find(x => x.id === vid); if(v) { v[field] = val; save(); } }
 };
 window.addNewProduct = () => {
-  loadDB();
   DB.products.unshift({
     id: 'p' + Math.random().toString(36).slice(2, 7),
     name: 'Produk Baru', cat: 'Lainnya', img: '', status: 'tersedia',
@@ -558,16 +558,13 @@ function renderSettings(el) {
     </div>`;
 }
 window.saveSet = () => {
-  loadDB();
   DB.settings.name = document.getElementById('s-name').value.trim();
   DB.settings.wa = document.getElementById('s-wa').value.replace(/\D/g, '');
   save();
-  showToast('Pengaturan disimpan!');
+  showToast('Pengaturan disimpan ke Cloud!');
 };
 
-/* --- BACKUP & RESTORE JSON --- */
 window.exportData = () => {
-  loadDB();
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(DB, null, 2));
   const dl = document.createElement('a');
   dl.setAttribute("href", dataStr);
@@ -576,28 +573,6 @@ window.exportData = () => {
   dl.click();
   dl.remove();
 };
-
-window.importData = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (evt) => {
-    try {
-      const parsed = JSON.parse(evt.target.result);
-      if (parsed && parsed.products) {
-        DB = parsed;
-        saveToStorage();
-        updateStats();
-        renderTab();
-        showToast('Restore data berhasil!');
-      } else { alert('Format JSON salah.'); }
-    } catch(err) { alert('Gagal baca file.'); }
-  };
-  reader.readAsText(file);
-};
-
-updateStats();
-renderTab();
 </script>
 </body>
 </html>
