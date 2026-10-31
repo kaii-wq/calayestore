@@ -36,8 +36,8 @@ h1 small{display:block;font-size:12px;color:var(--mute);font-weight:500}
 .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 
-button,input,select{font:inherit;padding:10px 14px;border-radius:12px;border:1px solid var(--line);outline:none}
-input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+button,input,select,textarea{font:inherit;padding:10px 14px;border-radius:12px;border:1px solid var(--line);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 .btn{background:var(--acc);color:#fff;border:none;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;font-size:13px}
 .btn:hover{opacity:.9;transform:translateY(-1px)}
 .btn.sm{padding:6px 12px;font-size:12px;border-radius:10px}
@@ -116,6 +116,7 @@ th{background:var(--bg);color:var(--mute);font-size:12px;text-transform:uppercas
     <button class="tab-btn on" onclick="window.setTab('orders',this)">📑 Pesanan Live</button>
     <button class="tab-btn" onclick="window.setTab('products',this)">📦 Stok & Gambar</button>
     <button class="tab-btn" onclick="window.setTab('coupons',this)">🎟️ Kupon Diskon</button>
+    <button class="tab-btn" onclick="window.setTab('announcement',this)">📢 Pengumuman & Banner</button>
     <button class="tab-btn" onclick="window.setTab('settings',this)">⚙️ Pengaturan</button>
   </div>
 
@@ -142,6 +143,7 @@ const db = getFirestore(app);
 
 const seedData = {
   settings: { name: 'Calaye Store', wa: '6281234567890' },
+  announcement: { text: '✨ Selamat datang di Calaye Store! Nikmati layanan instan & bergaransi.', active: true },
   coupons: [
     { code: 'CALAYE20', type: 'percent', val: 10 },
     { code: 'HEMAT5K', type: 'fixed', val: 5000 }
@@ -157,34 +159,41 @@ const seedData = {
   ]
 };
 
-let DB = seedData();
+let DB = JSON.parse(JSON.stringify(seedData));
 let currentTab = 'orders';
 let liveOrders = [];
 let knownOrderIds = new Set();
 let isFirstLoad = true;
+let isSyncing = false;
 
-// Sinkronisasi Data Toko (Produk, Kupon, Pengaturan) ke Firebase secara Real-Time
+// Sinkronisasi Data Toko ke Firebase
 onSnapshot(doc(db, "store", "config"), (docSnap) => {
+  if (isSyncing) return;
   if (docSnap.exists()) {
     const data = docSnap.data();
     if (data.products) DB.products = data.products;
     if (data.coupons) DB.coupons = data.coupons;
     if (data.settings) DB.settings = data.settings;
+    if (data.announcement) DB.announcement = data.announcement;
     updateStats();
     renderTab();
   } else {
-    setDoc(doc(db, "store", "config"), seedData());
+    setDoc(doc(db, "store", "config"), seedData);
   }
 });
 
 async function saveToCloud() {
   try {
+    isSyncing = true;
     await setDoc(doc(db, "store", "config"), {
       products: DB.products,
       coupons: DB.coupons,
-      settings: DB.settings
+      settings: DB.settings,
+      announcement: DB.announcement
     });
+    setTimeout(() => { isSyncing = false; }, 500);
   } catch(e) {
+    isSyncing = false;
     console.error("Gagal simpan ke cloud:", e);
   }
 }
@@ -293,7 +302,6 @@ function drawChart(completedOrders) {
   const canvas = document.getElementById('salesChart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const days = [];
   const mapData = {};
@@ -320,6 +328,7 @@ function drawChart(completedOrders) {
 
   const w = canvas.width = canvas.parentElement.clientWidth - 40;
   const h = canvas.height = 140;
+  ctx.clearRect(0, 0, w, h);
   const barWidth = (w / days.length) - 12;
 
   days.forEach((d, i) => {
@@ -329,8 +338,13 @@ function drawChart(completedOrders) {
     const y = h - barH - 20;
 
     ctx.fillStyle = '#8b5cf6';
-    ctx.roundRect ? ctx.roundRect(x, y, barWidth, barH, [6, 6, 0, 0]) : ctx.rect(x, y, barWidth, barH);
-    ctx.fill();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.beginPath();
+      ctx.roundRect(x, y, barWidth, barH, [6, 6, 0, 0]);
+      ctx.fill();
+    } else {
+      ctx.fillRect(x, y, barWidth, barH);
+    }
 
     ctx.fillStyle = '#64748b';
     ctx.font = '10px "Plus Jakarta Sans", sans-serif';
@@ -352,6 +366,7 @@ function renderTab() {
   if (currentTab === 'orders') renderOrders(app);
   else if (currentTab === 'products') renderProducts(app);
   else if (currentTab === 'coupons') renderCoupons(app);
+  else if (currentTab === 'announcement') renderAnnouncement(app);
   else if (currentTab === 'settings') renderSettings(app);
 }
 
@@ -480,7 +495,6 @@ function renderProducts(el) {
 
 const esc = s => String(s || '').replace(/"/g, '&quot;');
 
-// EKSPOS FUNGSI KE WINDOW SUPAYA BISA DIPANGGIL HTML
 window.setTab = setTab;
 window.updProd = (pi, field, val) => { DB.products[pi][field] = val; save(); };
 window.updVar = (pid, vid, field, val) => {
@@ -526,15 +540,15 @@ function renderCoupons(el) {
           <tbody>
             ${(DB.coupons || []).map((c, i) => `
               <tr>
-                <td><b><input value="${c.code}" onchange="DB.coupons[${i}].code=this.value.toUpperCase();save()"></b></td>
+                <td><b><input value="${c.code}" onchange="window.updCouponCode(${i}, this.value)"></b></td>
                 <td>
-                  <select onchange="DB.coupons[${i}].type=this.value;save()">
+                  <select onchange="window.updCouponType(${i}, this.value)">
                     <option value="percent" ${c.type==='percent'?'selected':''}>Persen (%)</option>
                     <option value="fixed" ${c.type==='fixed'?'selected':''}>Nominal (Rp)</option>
                   </select>
                 </td>
-                <td><input type="number" value="${c.val}" onchange="DB.coupons[${i}].val=+this.value;save()"></td>
-                <td><button class="btn del sm" onclick="DB.coupons.splice(${i},1);save()">Hapus</button></td>
+                <td><input type="number" value="${c.val}" onchange="window.updCouponVal(${i}, +this.value)"></td>
+                <td><button class="btn del sm" onclick="window.delCoupon(${i})">Hapus</button></td>
               </tr>
             `).join('')}
           </tbody>
@@ -542,9 +556,46 @@ function renderCoupons(el) {
       </div>
     </div>`;
 }
+
+window.updCouponCode = (i, val) => { DB.coupons[i].code = val.toUpperCase(); save(); };
+window.updCouponType = (i, val) => { DB.coupons[i].type = val; save(); };
+window.updCouponVal = (i, val) => { DB.coupons[i].val = val; save(); };
+window.delCoupon = (i) => { DB.coupons.splice(i, 1); save(); };
 window.addCoupon = () => { DB.coupons.push({ code: 'PROMO', type: 'percent', val: 10 }); save(); };
 
-/* --- TAB 4: PENGATURAN --- */
+/* --- TAB 4: PENGUMUMAN & BANNER (BARU) --- */
+function renderAnnouncement(el) {
+  const ann = DB.announcement || { text: '', active: true };
+  el.innerHTML = `
+    <div class="card" style="max-width:600px">
+      <h3>📢 Pengumuman & Banner Toko untuk Pembeli</h3>
+      <p style="color:var(--mute); font-size:12px; margin-top:4px;">Teks di bawah ini akan tersimpan otomatis ke Cloud Firebase dan bisa ditampilkan langsung di website pembeli Anda.</p>
+      
+      <div class="sp">
+        <label style="font-size:12px; font-weight:700; color:var(--mute); display:block; margin-bottom:6px;">Isi Teks Pengumuman / Banner:</label>
+        <textarea id="ann-text" rows="4" style="width:100%; resize:vertical;" placeholder="Contoh: ✨ Promo Diskon 50% khusus hari ini!">${esc(ann.text)}</textarea>
+      </div>
+
+      <div class="row sp" style="justify-content:flex-start; gap:14px;">
+        <label style="font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="ann-active" ${ann.active ? 'checked' : ''} style="width:18px; height:18px;">
+          Tampilkan Banner di Website Pembeli
+        </label>
+      </div>
+
+      <button class="btn ok sp" style="width:100%" onclick="window.saveAnnouncement()">💾 Simpan & Perbarui ke Cloud</button>
+    </div>`;
+}
+
+window.saveAnnouncement = () => {
+  const text = document.getElementById('ann-text').value;
+  const active = document.getElementById('ann-active').checked;
+  DB.announcement = { text, active };
+  save();
+  showToast('Pengumuman berhasil diperbarui ke Cloud!');
+};
+
+/* --- TAB 5: PENGATURAN --- */
 function renderSettings(el) {
   el.innerHTML = `
     <div class="card" style="max-width:500px">
@@ -574,7 +625,6 @@ window.exportData = () => {
   dl.click();
   dl.remove();
 };
-window.window = window; // Pastikan scope window global stabil
 </script>
 </body>
 </html>
