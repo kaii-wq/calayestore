@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calaye Store - Premium Apps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  --font:"Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --bg1:#faf6fd;
+  --card:rgba(255, 255, 255, 0.88);
+  --card-border:rgba(139, 92, 246, 0.15);
+  --ink:#2b1c38;
+  --mute:#867597;
+  --acc:#8b5cf6;
+  --acc-glow:rgba(139, 92, 246, 0.3);
+  --grad-btn:linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  --line:#ebdcf5;
+  --ok:#10b981;
+  --bad:#ef4444;
+  --shadow:0 12px 32px rgba(139, 92, 246, 0.1);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:var(--font); color:var(--ink); background:var(--bg1);
+  background-image:radial-gradient(at 0% 0%, rgba(139,92,246,0.12) 0px, transparent 50%),
+                   radial-gradient(at 100% 100%, rgba(236,72,153,0.1) 0px, transparent 50%);
+  background-attachment:fixed; min-height:100vh;
+}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 90px}
+header{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px;
+  padding:14px 18px;background:var(--card);backdrop-filter:blur(16px);
+  border:1px solid var(--card-border);border-radius:20px;box-shadow:var(--shadow);
+}
+h1{font-size:18px;margin:0;font-weight:800;color:var(--acc)}
+h1 small{display:block;font-size:11px;color:var(--mute);font-weight:500}
+nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+button,input,select{font:inherit;color:inherit}
+.btn{
+  border:1px solid var(--line);background:rgba(255,255,255,0.6);padding:8px 14px;
+  border-radius:99px;cursor:pointer;font-weight:600;font-size:12px;color:var(--ink);transition:all .2s;
+}
+.btn.on,.btn.pri{background:var(--grad-btn);color:#fff;border:none;box-shadow:0 4px 15px var(--acc-glow)}
+.btn.sm{padding:5px 10px;font-size:11px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.grid{grid-template-columns:1fr}}
+.card{
+  background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--card-border);
+  border-radius:20px;padding:16px;box-shadow:var(--shadow);
+}
+.card h3{margin:0 0 2px;font-size:16px;font-weight:700}
+.mute{color:var(--mute);font-size:12px}
+.vs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.v{
+  border:1px solid var(--line);border-radius:10px;padding:5px 10px;background:transparent;
+  cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;
+}
+.v.on{background:var(--acc);color:#fff;border-color:transparent}
+.v:disabled{opacity:.4;cursor:not-allowed}
+.price{font-size:17px;font-weight:800;color:var(--acc)}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+input,select{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 12px;width:100%;outline:none}
+input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;text-transform:uppercase}
+.ok{background:rgba(16,185,129,0.15);color:var(--ok)}
+.bad{background:rgba(239,68,68,0.15);color:var(--bad)}
+.toast{
+  position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;
+  padding:10px 20px;border-radius:99px;font-size:12px;font-weight:600;z-index:99;box-shadow:0 5px 20px rgba(0,0,0,0.2);
+}
+.qris-box{text-align:center;background:#fff;padding:16px;border-radius:16px;border:1px solid var(--line);margin-top:12px;}
+.qris-box img{width:200px;height:200px;object-fit:contain;margin:8px auto;display:block;border-radius:8px;}
+.timer-badge{font-size:15px;font-weight:800;color:var(--bad);background:rgba(239,68,68,0.1);padding:6px 12px;border-radius:12px;display:inline-block;margin:6px 0;}
+.success-icon{font-size:54px;margin-bottom:8px;animation:bounce .5s infinite alternate;}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+.sp{margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1 id="sn">Calaye Store</h1>
+    <small>Kota Yogyakarta • Pesan via WhatsApp</small>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main id="app"></main>
+</div>
+<div id="toast"></div>
+
+<script>
+const DB_KEY = 'calaye_store_db_v5';
+const BASE_QRIS = "00020101021126570011ID.DANA.WWW011893600915395683928802099568392880303UMI51440014ID.CO.QRIS.WWW0215ID10254193879030303UMI5204581353033605802ID5913Calaye Store 6015Kota Yogyakarta6105552726304B6D6";
+
+function convertQRISDynamic(qris, amount) {
+  let base = qris.slice(0, -4);
+  base = base.replace("010211", "010212");
+  const amtStr = amount.toString();
+  const amtTag = "54" + amtStr.length.toString().padStart(2, "0") + amtStr;
+  const idx58 = base.indexOf("5802ID");
+  if (idx58 !== -1) base = base.slice(0, idx58) + amtTag + base.slice(idx58);
+  else base = base + amtTag;
+  
+  let crc = 0xFFFF;
+  for (let i = 0; i < base.length; i++) {
+    crc ^= base.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      if ((crc & 0x8000) !== 0) crc = (crc << 1) ^ 0x1021;
+      else crc = crc << 1;
+    }
+  }
+  return base + (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, "0");
+}
+
+const seedData = () => ({
+  settings: { name: 'Calaye Store', wa: '6281234567890' },
+  coupons: [{ code: 'CALAYE20', type: 'percent', val: 10 }],
+  orders: [],
+  products: [
+    {
+      id: 'p1', name: 'Canva Pro', cat: 'Desain', status: 'tersedia',
+      variants: [
+        { id: 'v1', label: '1 Bulan', price: 10000, stock: 10 },
+        { id: 'v2', label: '1 Tahun', price: 60000, stock: 5 }
+      ]
+    }
+  ]
+});
+
+let DB;
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) DB = JSON.parse(raw);
+  } catch (e) {}
+  if (!DB || !Array.isArray(DB.products)) {
+    DB = seedData();
+  }
+}
+loadDB();
+
+let view = 'shop', cat = 'Semua', searchQuery = '', cart = {}, sel = {}, last = null, coupon = '';
+let paymentTimer = null;
+let timeLeft = 120; // 2 Menit (120 detik)
+
+const $ = id => document.getElementById(id);
+const rp = n => 'Rp' + Number(n || 0).toLocaleString('id-ID');
+const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const cartN = () => Object.values(cart).reduce((a, b) => a + b, 0);
+const nm = () => (DB.settings && DB.settings.name) ? DB.settings.name : 'Calaye Store';
+
+function toast(m) {
+  const t = $('toast');
+  if (t) {
+    t.innerHTML = `<div class="toast">${esc(m)}</div>`;
+    setTimeout(() => t.innerHTML = '', 2200);
+  }
+}
+
+function go(v) { 
+  if (v !== 'cart') { clearInterval(paymentTimer); }
+  view = v; last = null; render(); 
+}
+
+function render() {
+  document.title = nm();
+  if ($('sn')) $('sn').textContent = nm();
+  if ($('nav')) {
+    $('nav').innerHTML = `
+      <button class="btn sm ${view === 'shop' ? 'on' : ''}" onclick="go('shop')">Katalog</button>
+      <button class="btn sm ${view === 'cart' ? 'on' : ''}" onclick="go('cart')">Keranjang${cartN() ? ' (' + cartN() + ')' : ''}</button>
+      <button class="btn sm" onclick="document.getElementById('importFile').click()">📂 Update Stok</button>
+      <input type="file" id="importFile" style="display:none" accept=".json" onchange="importJSON(event)">
+    `;
+  }
+  
+  const app = $('app');
+  if (app) {
+    app.innerHTML = view === 'shop' ? shop() : cartV();
+  }
+}
+
+function shop() {
+  const cats = ['Semua', ...new Set(DB.products.map(p => p.cat || 'Lainnya'))];
+  const list = DB.products.filter(p => (cat === 'Semua' || p.cat === cat) && (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()));
+
+  return `
+    <div style="margin-bottom:12px;">
+      <input type="text" placeholder="🔍 Cari aplikasi..." value="${esc(searchQuery)}" oninput="searchQuery=this.value;render()">
+    </div>
+    <div class="chips">
+      ${cats.map(c => `<button class="btn sm ${c === cat ? 'on' : ''}" onclick="cat='${esc(c)}';render()">${esc(c)}</button>`).join('')}
+    </div>
+    <div class="grid">
+      ${list.length ? list.map(p => {
+        const variants = p.variants || [];
+        const off = p.status !== 'tersedia' || variants.every(v => (v.stock || 0) < 1);
+        const cur = variants.find(v => v.id === sel[p.id]) || variants.find(v => (v.stock || 0) > 0) || variants[0];
+        
+        return `
+          <div class="card">
+            <div class="row">
+              <h3>${esc(p.name)}</h3>
+              <span class="badge ${off ? 'bad' : 'ok'}">${off ? 'Habis' : 'Tersedia'}</span>
+            </div>
+            <div class="mute">${esc(p.cat)}</div>
+            <div class="vs">
+              ${variants.map(v => `<button class="v ${cur && v.id === cur.id ? 'on' : ''}" ${(v.stock || 0) < 1 ? 'disabled' : ''} onclick="sel['${p.id}']='${v.id}';render()">${esc(v.label)}</button>`).join('')}
+            </div>
+            ${cur ? `
+              <div class="row">
+                <div>
+                  <div class="price">${rp(cur.price)}</div>
+                  <div class="mute">Stok: ${cur.stock || 0}</div>
+                </div>
+                <button class="btn pri sm" ${off || (cur.stock || 0) < 1 ? 'disabled' : ''} onclick="add('${cur.id}')">+ Keranjang</button>
+              </div>
+            ` : ''}
+          </div>`;
+      }).join('') : '<div class="card" style="grid-column:span 2;text-align:center;color:var(--mute)">Produk tidak ditemukan</div>'}
+    </div>`;
+}
+
+function findVar(vid) {
+  for (const p of DB.products) {
+    if (p.variants) {
+      const v = p.variants.find(x => x.id === vid);
+      if (v) return { p, v };
+    }
+  }
+  return null;
+}
+
+function add(id) {
+  const f = findVar(id);
+  if (!f) return;
+  if ((cart[id] || 0) >= f.v.stock) { toast('Stok tidak cukup!'); return; }
+  cart[id] = (cart[id] || 0) + 1;
+  toast(f.p.name + ' ditambahkan 🛒');
+  render();
+}
+
+function qty(id, d) {
+  const f = findVar(id);
+  if (!f) { delete cart[id]; render(); return; }
+  const n = (cart[id] || 0) + d;
+  if (n <= 0) delete cart[id];
+  else if (n > f.v.stock) { toast('Stok tidak cukup!'); return; }
+  else cart[id] = n;
+  render();
+}
+
+function cartV() {
+  if (last) {
+    loadDB();
+    const currentOrder = (DB.orders || []).find(o => o.code === last.code);
+    const orderStatus = currentOrder ? currentOrder.status : 'Menunggu';
+
+    if (orderStatus === 'Selesai') {
+      clearInterval(paymentTimer);
+    }
+
+    return `
+      <div class="card" style="text-align:center;padding:28px 20px">
+        ${orderStatus === 'Selesai' ? `
+          <div class="success-icon">✅</div>
+          <h2 style="color:var(--ok); margin-bottom:6px">Pembayaran Berhasil!</h2>
+          <p class="mute">Admin telah mengonfirmasi pembayaran Anda. Pesanan sedang diproses.</p>
+          <div style="background:rgba(16,185,129,0.08); border:1px solid var(--ok); padding:14px; border-radius:14px; margin:14px 0;">
+            <b>Kode Order: ${last.code}</b><br>
+            <span class="badge ok" style="margin-top:6px; display:inline-block;">STATUS: SUDAH DIBAYAR / SELESAI</span>
+          </div>
+        ` : `
+          <h3 style="color:var(--acc); margin-bottom:4px">Menunggu Pembayaran QRIS ⏳</h3>
+          <p class="mute">Selesaikan pembayaran sebelum waktu habis.</p>
+          <div class="timer-badge" id="timer-display">Waktu tersisa: 02:00</div>
+          
+          <div style="background:#fff; border:1px solid var(--line); padding:14px; border-radius:14px; margin:12px 0;">
+            <b>Kode Order: ${last.code}</b><br>
+            <span class="badge bad" style="margin-top:6px; display:inline-block;">STATUS: MENUNGGU PEMBAYARAN</span>
+          </div>
+        `}
+        
+        <a class="btn pri sp" style="display:inline-block;text-decoration:none;margin-top:8px" href="${last.url}" target="_blank" rel="noopener">Kirim Bukti ke WhatsApp 🚀</a>
+        <div style="margin-top:16px"><button class="btn sm" onclick="clearInterval(paymentTimer);last=null;render()">← Belanja Lagi</button></div>
+      </div>`;
+  }
+
+  const ids = Object.keys(cart);
+  if (!ids.length) return '<div class="card" style="text-align:center;padding:30px"><p class="mute">Keranjang belanjaan kamu masih kosong.</p><button class="btn pri sm sp" onclick="go(\'shop\')">Lihat Katalog</button></div>';
+
+  let subtotal = 0;
+  ids.forEach(i => { const f = findVar(i); if (f) subtotal += f.v.price * cart[i]; });
+
+  let discount = 0, discName = '';
+  const coupons = DB.coupons || [];
+  const cObj = coupons.find(x => (x.code || '').toUpperCase() === coupon.trim().toUpperCase());
+  if (cObj) {
+    discount = cObj.type === 'percent' ? subtotal * (cObj.val / 100) : cObj.val;
+    discName = `Diskon (${cObj.code})`;
+  }
+  const total = Math.max(0, subtotal - discount);
+  const dynamicQrisStr = total > 0 ? convertQRISDynamic(BASE_QRIS, total) : BASE_QRIS;
+
+  return `
+    <div class="card">
+      <h3>Keranjang Belanja 🛒</h3>
+      ${ids.map(i => {
+        const f = findVar(i);
+        if (!f) return '';
+        return `
+          <div class="row sp" style="border-bottom:1px solid var(--line); padding-bottom:8px;">
+            <div>
+              <b>${esc(f.p.name)}</b>
+              <div class="mute">${esc(f.v.label)} · ${rp(f.v.price)}</div>
+            </div>
+            <div class="row">
+              <button class="btn sm" onclick="qty('${i}',-1)">−</button>
+              <b style="min-width:20px;text-align:center">${cart[i]}</b>
+              <button class="btn sm" onclick="qty('${i}',1)">+</button>
+            </div>
+          </div>`;
+      }).join('')}
+      <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+      <div class="row"><span class="mute">Subtotal</span><span>${rp(subtotal)}</span></div>
+      ${discount > 0 ? `<div class="row mute" style="color:var(--ok)"><span>${discName}</span><span>-${rp(discount)}</span></div>` : ''}
+      <div class="row sp" style="font-size:16px;"><b>Total Bayar</b><span class="price">${rp(total)}</span></div>
+
+      <div class="sp row" style="gap:6px">
+        <input style="flex:1" placeholder="Kode Kupon (Contoh: CALAYE20)" value="${esc(coupon)}" oninput="coupon=this.value">
+        <button class="btn sm" onclick="render()">Pakai Kupon</button>
+      </div>
+
+      <div class="sp"><input id="cn" placeholder="Nama Lengkap Kamu"></div>
+      <div class="sp"><input id="cw" inputmode="tel" placeholder="Nomor WhatsApp (Contoh: 08123456789)"></div>
+      
+      <div class="sp">
+        <label class="mute" style="display:block;margin-bottom:6px">Pilih Metode Pembayaran:</label>
+        <select id="cpay">
+          <option value="QRIS">⚡ QRIS Dinamis (Nominal Otomatis ${rp(total)})</option>
+          <option value="Transfer BCA">🏦 Transfer Bank BCA</option>
+        </select>
+      </div>
+
+      <div class="qris-box">
+        <b style="font-size:14px; color:var(--acc);">QRIS Otomatis Terisi Nominal</b>
+        <div style="font-size:18px; font-weight:800; color:var(--ok); margin-top:4px;">${rp(total)}</div>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(dynamicQrisStr)}" alt="Barcode QRIS">
+        <div style="font-size:11px; color:var(--mute); margin-top:6px;">Scan barcode di atas menggunakan DANA, GoPay, OVO, ShopeePay, atau m-Banking.</div>
+      </div>
+
+      <button class="btn pri sp" style="width:100%; padding: 12px;" onclick="checkout()">Konfirmasi & Bayar via WhatsApp 🚀</button>
+    </div>`;
+}
+
+function startTimer() {
+  clearInterval(paymentTimer);
+  timeLeft = 120; // 2 menit
+  paymentTimer = setInterval(() => {
+    if (view !== 'cart' || !last) {
+      clearInterval(paymentTimer);
+      return;
+    }
+    
+    // Background sync: Cek database secara berkala di latar belakang
+    loadDB();
+    const currentOrder = (DB.orders || []).find(o => o.code === last.code);
+    if (currentOrder && currentOrder.status === 'Selesai') {
+      render();
+      clearInterval(paymentTimer);
+      return;
+    }
+
+    timeLeft--;
+    const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+    const s = String(timeLeft % 60).padStart(2, '0');
+    const disp = $('timer-display');
+    if (disp) disp.textContent = `Waktu tersisa: ${m}:${s}`;
+
+    if (timeLeft <= 0) {
+      clearInterval(paymentTimer);
+      toast('Waktu pembayaran habis!');
+    }
+  }, 1000); // Cek setiap 1 detik di latar belakang
+}
+
+function checkout() {
+  const name = $('cn').value.trim();
+  const wa = $('cw').value.replace(/\D/g, '');
+  const paymentMethod = $('cpay').value;
+
+  if (!name || wa.length < 9) { toast('Isi nama dan nomor WA yang valid!'); return; }
+  
+  const ids = Object.keys(cart);
+  const d = new Date();
+  const code = 'CS-' + String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+  
+  const items = ids.map(i => {
+    const f = findVar(i);
+    return { vid: f.v.id, name: f.p.name, label: f.v.label, price: f.v.price, qty: cart[i] };
+  });
+  
+  const subtotal = items.reduce((a, b) => a + b.price * b.qty, 0);
+  let discount = 0;
+  const coupons = DB.coupons || [];
+  const cObj = coupons.find(x => (x.code || '').toUpperCase() === coupon.trim().toUpperCase());
+  if (cObj) discount = cObj.type === 'percent' ? subtotal * (cObj.val / 100) : cObj.val;
+  const total = Math.max(0, subtotal - discount);
+
+  const targetWA = (DB.settings && DB.settings.wa) ? DB.settings.wa : '6281234567890';
+  const text = `Halo Calaye Store, saya sudah memesan:\n\nKode Order: *${code}*\nNama: ${name}\nWA: ${wa}\n\nRincian Pesanan:\n` + items.map((x, n) => `${n + 1}. ${x.name} (${x.label}) x${x.qty} = ${rp(x.price * x.qty)}`).join('\n') + `\n\n*Total Bayar: ${rp(total)}*\nMetode Pembayaran: *${paymentMethod}*\n\n(Saya akan segera konfirmasi pembayaran). Terima kasih!`;
+  const url = 'https://wa.me/' + targetWA + '?text=' + encodeURIComponent(text);
+
+  if (!Array.isArray(DB.orders)) DB.orders = [];
+  DB.orders.unshift({ code, name, wa, items, total, status: 'Menunggu', date: d.toLocaleString('id-ID') });
+  
+  try { localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch (e) {}
+
+  cart = {}; coupon = ''; last = { code, url }; render(); startTimer(); window.open(url, '_blank');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (evt) {
+    try {
+      const parsed = JSON.parse(evt.target.result);
+      if (parsed && parsed.products) {
+        DB = parsed;
+        localStorage.setItem(DB_KEY, JSON.stringify(DB));
+        render();
+        toast('Stok & Data berhasil diperbarui! ✨');
+      }
+    } catch (err) { toast('Gagal mengimpor file JSON!'); }
+  };
+  reader.readAsText(file);
+}
+
+render();
+</script>
+</body>
+</html>
