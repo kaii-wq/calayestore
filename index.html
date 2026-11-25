@@ -1,802 +1,818 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portal Siswa TEFA — SMK Negeri 3 Yogyakarta (Kelas X TE 2)</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calaye Store - Premium Apps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  --font:"Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --bg1:#f4fbf7;
+  --card:#ffffff;
+  --card-border:rgba(16, 185, 129, 0.15);
+  --ink:#1b382b;
+  --mute:#5a7c6b;
+  --acc:#059669; /* Hijau Daun Utama */
+  --acc-glow:rgba(5, 150, 105, 0.2);
+  --grad-btn:linear-gradient(135deg, #059669 0%, #10b981 50%, #f59e0b 100%);
+  --line:#d1fae5;
+  --ok:#10b981;
+  --bad:#ef4444;
+  --shadow:0 10px 30px rgba(5, 150, 105, 0.08);
+}
+[data-theme="dark"]{
+  --bg1:#071a12;
+  --card:#10261d;
+  --card-border:rgba(16, 185, 129, 0.25);
+  --ink:#e2f8ec;
+  --mute:#6ee7b7;
+  --line:#1c4031;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:var(--font); color:var(--ink); background:var(--bg1);
+  min-height:100vh; padding-bottom: 90px; transition: background .4s ease, color .4s ease;
+  position: relative; overflow-x: hidden;
+}
 
-  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+/* Hiasan Stiker Daun & Bunga Estetik di Latar Belakang */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  width: 180px; height: 180px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.15;
+  z-index: -1;
+  pointer-events: none;
+}
+/* Stiker Daun Estetik Kiri Atas */
+body::before {
+  top: -20px; left: -20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23059669'%3E%3Cpath d='M12 1.5C5.5 8 5 16 12 22.5C19 16 18.5 8 12 1.5Z' fill='%23f4fbf7'/%3E%3Cpath d='M12 4.5V20' stroke='%23059669' stroke-width='1' stroke-linecap='round'/%3E%3C/svg%3E");
+  animation: floatDeco 6s ease-in-out infinite alternate;
+}
+/* Stiker Bunga Kuning Estetik Kanan Bawah */
+body::after {
+  bottom: 10px; right: -20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'%3E%3Cpath d='M12,2C14.5,6 18,7 22,9.5C18,12 16.5,15.5 14,20C11.5,16 8,14.5 4,12C8,9.5 9.5,6 12,2Z'/%3E%3C/svg%3E");
+  animation: floatDeco 8s ease-in-out infinite alternate-reverse;
+}
 
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          },
-        },
-      },
-    };
-  </script>
+@keyframes floatDeco {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(15px) rotate(10deg); }
+}
 
-  <!-- Lucide Icons CDN -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+.wrap{max-width:760px;margin:0 auto;padding:16px; position: relative; z-index: 1;}
+header{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:16px;
+  padding:14px 20px;background:var(--card);
+  border:1px solid var(--card-border);border-radius:20px;box-shadow:var(--shadow);
+  animation: slideDown .5s ease;
+}
+h1{font-size:18px;margin:0;font-weight:800;color:var(--acc)}
+nav{display:flex;gap:6px;align-items:center}
+button,input,select{font:inherit;color:inherit}
 
-  <!-- Firebase JS SDK v10 Compat CDN -->
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+.btn{
+  border:1px solid var(--line);background:var(--card);padding:8px 16px;
+  border-radius:99px;cursor:pointer;font-weight:600;font-size:12px;color:var(--ink);
+  transition:all .25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(5,150,105,0.15);border-color:var(--acc);}
+.btn:active{transform:scale(0.96);}
+.btn.on,.btn.pri{background:var(--grad-btn);color:#fff;border:none;box-shadow:0 4px 15px var(--acc-glow)}
+.btn.sm{padding:6px 12px;font-size:11px}
 
-  <style>
-    body {
-      background-color: #0B0F17;
-      background-image:
-        radial-gradient(at 15% 0%, rgba(16, 185, 129, 0.07) 0px, transparent 45%),
-        radial-gradient(at 85% 0%, rgba(14, 165, 233, 0.06) 0px, transparent 45%);
-      color: #F1F5F9;
-      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    }
-    .font-mono-num {
-      font-family: 'JetBrains Mono', monospace;
-      font-variant-numeric: tabular-nums;
-    }
-    input[type="number"].no-spinner::-webkit-inner-spin-button,
-    input[type="number"].no-spinner::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    input[type="number"].no-spinner {
-      -moz-appearance: textfield;
-    }
-  </style>
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.grid{grid-template-columns:1fr}}
+
+/* Animasi Transisi Halaman */
+.page-transition {
+  animation: pageSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pageSlideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Efek Border Gradasi Hijau-Kuning Berputar Saat Hover */
+.card-glow-wrap {
+  position: relative;
+  border-radius: 20px;
+  padding: 2px;
+  background: var(--card-border);
+  transition: all 0.3s ease;
+  animation: fadeUp .5s ease forwards;
+}
+
+.card-glow-wrap:hover {
+  background: linear-gradient(135deg, #059669, #f59e0b, #10b981);
+  background-size: 200% 200%;
+  animation: borderRotate 3s linear infinite, floatCard 0.3s ease forwards;
+  box-shadow: 0 15px 35px rgba(5,150,105,0.2);
+}
+
+@keyframes borderRotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes floatCard {
+  to { transform: translateY(-4px); }
+}
+
+.card{
+  background:var(--card);
+  border-radius:18px;
+  padding:16px;
+  height: 100%;
+  cursor: pointer;
+}
+.card h3{margin:0 0 2px;font-size:15px;font-weight:700}
+.mute{color:var(--mute);font-size:12px}
+
+/* Kotak Detail Deskripsi Penuh */
+.desc-detail {
+  color: var(--ink);
+  font-size: 13px;
+  margin: 14px 0;
+  line-height: 1.6;
+  background: var(--bg1);
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  white-space: pre-line;
+}
+
+.vs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+
+.v{
+  border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:transparent;
+  cursor:pointer;font-size:12px;font-weight:600;transition:all .2s ease;color:var(--ink);
+}
+.v:hover{border-color:var(--acc);}
+.v.on{background:var(--acc);color:#fff;border-color:transparent;box-shadow:0 2px 10px var(--acc-glow)}
+.v:disabled{opacity:.4;cursor:not-allowed}
+
+.price{font-size:18px;font-weight:800;color:var(--acc)}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+
+input,select{
+  border:1px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:12px;padding:10px 14px;width:100%;outline:none;
+  transition:all .25s ease;
+}
+input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;text-transform:uppercase}
+.ok{background:rgba(16,185,129,0.15);color:var(--ok)}
+.bad{background:rgba(239,68,68,0.15);color:var(--bad)}
+
+/* Toast Animation */
+.toast{
+  position:fixed;left:50%;bottom:95px;transform:translateX(-50%);background:var(--ink);color:var(--bg1);
+  padding:10px 20px;border-radius:99px;font-size:12px;font-weight:600;z-index:99;box-shadow:0 5px 20px rgba(0,0,0,0.2);
+  animation: popUp .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.success-icon{
+  font-size:54px;margin-bottom:8px;
+  animation: bounce 1.2s infinite alternate;
+}
+
+/* Payment Method Options */
+.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+.pay-opt{
+  border:2px solid var(--line);border-radius:12px;padding:10px;text-align:center;cursor:pointer;
+  font-weight:700;font-size:12px;background:var(--card);color:var(--ink);
+  transition:all .25s ease;
+}
+.pay-opt:hover{border-color:var(--acc);transform:scale(1.02);}
+.pay-opt.active{border-color:var(--acc);background:rgba(5,150,105,0.12);color:var(--acc);box-shadow:0 4px 12px var(--acc-glow)}
+
+/* Floating Cart Bubble */
+.cart-bubble{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:var(--grad-btn); color:#fff; padding:12px 20px; border-radius:99px;
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
+  width:90%; max-width:500px; box-shadow:0 10px 30px rgba(5,150,105,0.3);
+  z-index:98; cursor:pointer; font-weight:700; font-size:13px;
+  animation: floatIn .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), pulse 2.5s infinite ease-in-out;
+  transition:transform .2s ease;
+}
+.cart-bubble:hover{transform:translateX(-50%) scale(1.03);}
+
+.announcement-banner{
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #f59e0b 100%);
+  color: #fff; padding: 12px 18px; border-radius: 16px; font-size: 13px; font-weight: 600;
+  margin-bottom: 16px; box-shadow: 0 4px 15px var(--acc-glow); display: flex; align-items: center; gap: 10px;
+  animation: fadeIn .6s ease;
+}
+.sp{margin-top:12px}
+.prod-img{
+  width:100%;height:130px;object-fit:cover;border-radius:12px;margin-bottom:10px;background:#eee;
+}
+.prod-img-detail{
+  width:100%;height:220px;object-fit:cover;border-radius:14px;margin-bottom:14px;background:#eee;
+}
+
+/* Layar Maintenance / Web Dimatikan dari Gokil */
+.maintenance-box{
+  text-align:center;
+  padding:42px 22px;
+  cursor:default;
+  border:1px solid var(--card-border);
+  box-shadow:var(--shadow);
+}
+.maintenance-icon{
+  font-size:52px;
+  margin-bottom:10px;
+  animation: bounce 1.4s infinite alternate;
+}
+
+/* Keyframe Animations */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes floatIn{from{opacity:0;transform:translate(-50%, 40px)}to{opacity:1;transform:translate(-50%, 0)}}
+@keyframes popUp{from{opacity:0;transform:translate(-50%, 20px) scale(0.9)}to{opacity:1;transform:translate(-50%, 0) scale(1)}}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+@keyframes pulse{
+  0%, 100%{box-shadow:0 10px 30px rgba(5,150,105,0.3);}
+  50%{box-shadow:0 10px 40px rgba(245,158,11,0.4);}
+}
+
+/* ===== Logo Daun Clove ===== */
+#sn{display:flex;align-items:center;gap:8px}
+.clove-logo{flex:none;filter:drop-shadow(0 2px 4px rgba(5,150,105,0.35));animation:swayLeaf 4s ease-in-out infinite alternate;transform-origin:bottom center;}
+@keyframes swayLeaf{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+
+/* ===== Plester Kertas (Washi Tape) Aestetik ===== */
+.washi-tape{
+  position:absolute; top:-12px; left:50%; transform:translateX(-50%) rotate(-4deg);
+  width:96px; height:26px; z-index:3; pointer-events:none; opacity:.9;
+  background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.28) 0 6px, transparent 6px 12px),
+    linear-gradient(135deg, rgba(16,185,129,0.65), rgba(245,158,11,0.6));
+  border-left:2px dashed rgba(255,255,255,0.55);
+  border-right:2px dashed rgba(255,255,255,0.55);
+  box-shadow:0 3px 6px rgba(0,0,0,0.12);
+  border-radius:2px;
+}
+
+/* ===== Kartu Sticky Notes Bergaris ===== */
+:root{
+  --note-bg:#fffdf0;
+  --note-line:rgba(5,150,105,0.14);
+  --note-margin:rgba(239,68,68,0.22);
+}
+[data-theme="dark"]{
+  --note-bg:#152a20;
+  --note-line:rgba(110,231,183,0.14);
+  --note-margin:rgba(245,158,11,0.3);
+}
+.card.sticky{
+  position:relative;
+  background:
+    linear-gradient(90deg, transparent 32px, var(--note-margin) 32px, var(--note-margin) 33px, transparent 33px),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 25px, var(--note-line) 25px, var(--note-line) 26px),
+    var(--note-bg);
+  background-position:0 10px;
+  box-shadow:0 6px 16px rgba(5,150,105,0.10);
+}
+.card.sticky .prod-img{margin-top:16px}
+.grid .card-glow-wrap:nth-child(odd){transform:rotate(-0.7deg)}
+.grid .card-glow-wrap:nth-child(even){transform:rotate(0.7deg)}
+</style>
+<base target="_blank">
 </head>
-<body class="min-h-screen bg-[#0B0F17] text-slate-200 antialiased selection:bg-emerald-500/20 selection:text-emerald-200">
-
-  <!-- FIREBASE CONFIGURATION (Sama dengan Admin) -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDAz5XgzNnll5ON_C7sTIZT9iRuzHL_63w",
-      authDomain: "tefa-aa841.firebaseapp.com",
-      databaseURL: "https://tefa-aa841-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "tefa-aa841",
-      storageBucket: "tefa-aa841.firebasestorage.app",
-      messagingSenderId: "645319588053",
-      appId: "1:645319588053:web:0e237892078ad3e9380a5c",
-      measurementId: "G-DMTB0V43J9"
-    };
-  </script>
-
-  <div class="min-h-screen flex flex-col">
-    <!-- HEADER -->
-    <header class="sticky top-0 z-20 bg-[#0B0F17]/90 backdrop-blur-md border-b border-slate-800/80">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-            <i data-lucide="user-check" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <h1 class="text-base font-bold tracking-tight text-white">Portal Capaian &amp; Nilai Siswa TEFA</h1>
-              <span id="db-status-badge" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono-num text-amber-400 bg-amber-500/10">
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                <span>LocalStorage Mode</span>
-              </span>
-            </div>
-            <p class="text-xs text-slate-400">SMK Negeri 3 Yogyakarta • Perakitan Songsong Helm Latih (PT YPTI)</p>
-          </div>
-        </div>
-
-        <div class="text-xs font-mono-num text-slate-400">
-          Target: <strong id="header-target-worker" class="text-emerald-400">10 pcs/siswa</strong> • KKM: <strong class="text-white">76</strong>
-        </div>
-      </div>
-    </header>
-
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
-
-      <!-- FILTER PILIH SISWA & TANGGAL -->
-      <section class="rounded-2xl bg-[#111622] border border-slate-800/80 p-4 sm:p-5 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-          <div class="md:col-span-5">
-            <label for="student-select" class="block text-xs font-medium text-slate-300 mb-1.5">
-              Pilih Nama / Nomor Presensi Siswa
-            </label>
-            <select
-              id="student-select"
-              onchange="onStudentChange(this.value)"
-              class="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F17] border border-slate-800 text-sm text-white focus:outline-none focus:border-emerald-500/60"
-            ></select>
-          </div>
-
-          <div class="md:col-span-4">
-            <label for="search-student-input" class="block text-xs font-medium text-slate-300 mb-1.5">
-              Cari Cepat Nama / No. Presensi
-            </label>
-            <input
-              id="search-student-input"
-              type="text"
-              oninput="filterStudentDropdown(this.value)"
-              placeholder="Ketik nama atau nomor (misal: 13 / Rhino)..."
-              class="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F17] border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/60"
-            />
-          </div>
-
-          <div class="md:col-span-3">
-            <label for="period-select" class="block text-xs font-medium text-slate-300 mb-1.5">
-              Periode / Tanggal
-            </label>
-            <select
-              id="period-select"
-              onchange="onPeriodChange(this.value)"
-              class="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F17] border border-slate-800 text-xs sm:text-sm font-mono-num text-white focus:outline-none focus:border-emerald-500/60"
-            >
-              <option value="ALL_4_DAYS">Rekap 4 Hari Kerja</option>
-              <option value="2026-11-23">Senin, 23 Nov 2026</option>
-              <option value="2026-11-24">Selasa, 24 Nov 2026</option>
-              <option value="2026-11-26">Kamis, 26 Nov 2026</option>
-              <option value="2026-11-27">Jumat, 27 Nov 2026</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="pt-3 border-t border-slate-800/70 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-          <div>
-            Kelas: <strong id="meta-kelas" class="text-slate-200">X TE 2</strong> • Ruang: <strong id="meta-ruang" class="text-slate-200">Ruang 84</strong>
-          </div>
-          <div class="font-mono-num">
-            Rumus Produktivitas: <strong id="formula-text" class="text-sky-400">(Lolos QC / 15) × 100%</strong>
-          </div>
-        </div>
-      </section>
-
-      <!-- PROFIL & KARTU NILAI UTAMA SISWA -->
-      <section class="rounded-2xl bg-[#111622] border border-slate-800/80 p-5 space-y-5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800/70">
-          <div>
-            <div class="flex items-center gap-2">
-              <span id="student-presensi-badge" class="px-2.5 py-0.5 rounded-md text-xs font-mono-num font-bold bg-emerald-500/10 text-emerald-400">#13</span>
-              <h2 id="student-name-display" class="text-xl font-bold text-white">Rhino</h2>
-            </div>
-            <p id="student-role-display" class="text-xs text-slate-400 mt-1">Staf Unit Produksi • PIN 2001</p>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400">Status Presensi:</span>
-            <span id="student-attendance-badge" class="px-3 py-1 rounded-full text-xs font-mono-num font-semibold bg-emerald-500/15 text-emerald-400">Hadir</span>
-          </div>
-        </div>
-
-        <!-- 4 KARTU ANGKA UTAMA: LOLOS QC, REJECT, % PRODUKTIVITAS, KONVERSI NILAI -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div class="rounded-xl bg-[#0B0F17] border border-slate-800/80 p-4">
-            <div class="text-xs text-slate-400 flex items-center justify-between">
-              <span>Lolos QC</span>
-              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
-            </div>
-            <div id="val-lolos" class="text-2xl font-bold font-mono-num text-emerald-400 mt-2">0 pcs</div>
-            <p id="sub-lolos" class="text-[11px] font-mono-num text-slate-500 mt-1">Target: 10 pcs</p>
-          </div>
-
-          <div class="rounded-xl bg-[#0B0F17] border border-slate-800/80 p-4">
-            <div class="text-xs text-slate-400 flex items-center justify-between">
-              <span>Reject</span>
-              <i data-lucide="x-circle" class="w-4 h-4 text-red-400"></i>
-            </div>
-            <div id="val-reject" class="text-2xl font-bold font-mono-num text-red-400 mt-2">0 unit</div>
-            <p id="sub-reject" class="text-[11px] font-mono-num text-slate-500 mt-1">Rasio Reject: 0.0%</p>
-          </div>
-
-          <div class="rounded-xl bg-[#0B0F17] border border-slate-800/80 p-4">
-            <div class="text-xs text-slate-400 flex items-center justify-between">
-              <span>% Produktivitas</span>
-              <i data-lucide="gauge" class="w-4 h-4 text-sky-400"></i>
-            </div>
-            <div id="val-prod" class="text-2xl font-bold font-mono-num text-sky-400 mt-2">0.0%</div>
-            <p id="sub-prod" class="text-[11px] font-mono-num text-slate-500 mt-1">Batas 100%: 15 pcs</p>
-          </div>
-
-          <div class="rounded-xl bg-[#0B0F17] border border-slate-800/80 p-4">
-            <div class="text-xs text-slate-400 flex items-center justify-between">
-              <span>Konversi Nilai</span>
-              <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
-            </div>
-            <div class="mt-2">
-              <span id="val-grade" class="inline-block px-3 py-1 rounded-lg text-lg font-bold font-mono-num bg-slate-800 text-slate-300">-</span>
-            </div>
-            <p id="sub-grade" class="text-[11px] text-slate-500 mt-1.5">KKM: 76</p>
-          </div>
-        </div>
-
-        <!-- RINGKASAN ATURAN KONVERSI NILAI AKTIF -->
-        <div class="rounded-xl bg-[#0B0F17] border border-slate-800/70 p-4">
-          <div class="text-xs font-semibold text-slate-300 mb-2">
-            Acuan Konversi Nilai Saat Ini (Target <span id="rule-target-val" class="font-mono-num text-emerald-400">10</span> pcs • KKM = 76)
-          </div>
-          <div id="rule-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-[11px] font-mono-num text-slate-400"></div>
-        </div>
-
-        <!-- PANEL INPUT LAPANGAN (KHUSUS STAF PRODUKSI #13-#35) -->
-        <div id="worker-input-box" class="rounded-xl bg-[#0B0F17] border border-slate-800/80 p-4 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h3 class="text-xs font-semibold uppercase tracking-wider text-emerald-400">
-                Input / Koreksi Capaian Lapangan (Tanggal Terpilih)
-              </h3>
-              <p class="text-[11px] text-slate-400">
-                Perubahan langsung tersimpan ke LocalStorage &amp; Firebase agar nilai dan % produktivitas segera terhitung.
-              </p>
-            </div>
-            <span id="input-day-label" class="text-xs font-mono-num text-slate-300">2026-11-23</span>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="flex items-center justify-between bg-[#111622] border border-slate-800 rounded-xl p-3">
-              <div>
-                <div class="text-xs font-medium text-slate-300">Lolos QC (pcs)</div>
-                <div class="text-[11px] text-slate-500">Produk sesuai standar</div>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <button type="button" onclick="stepMetric('lolos', -1)" class="w-8 h-8 rounded-lg bg-[#0B0F17] hover:bg-slate-800 border border-slate-800 font-mono-num cursor-pointer">-</button>
-                <input id="input-lolos" type="number" min="0" onchange="setMetric('lolos', this.value)" class="no-spinner w-16 text-center py-1.5 rounded-lg bg-[#0B0F17] border border-slate-800 font-mono-num text-sm font-bold text-emerald-400 focus:outline-none focus:border-emerald-500/60" />
-                <button type="button" onclick="stepMetric('lolos', 1)" class="w-8 h-8 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-mono-num cursor-pointer">+</button>
-              </div>
-            </div>
-
-            <div class="flex items-center justify-between bg-[#111622] border border-slate-800 rounded-xl p-3">
-              <div>
-                <div class="text-xs font-medium text-slate-300">Reject (unit)</div>
-                <div class="text-[11px] text-slate-500">Produk perlu revisi ulang</div>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <button type="button" onclick="stepMetric('reject', -1)" class="w-8 h-8 rounded-lg bg-[#0B0F17] hover:bg-slate-800 border border-slate-800 font-mono-num cursor-pointer">-</button>
-                <input id="input-reject" type="number" min="0" onchange="setMetric('reject', this.value)" class="no-spinner w-16 text-center py-1.5 rounded-lg bg-[#0B0F17] border border-slate-800 font-mono-num text-sm font-bold text-red-400 focus:outline-none focus:border-red-500/60" />
-                <button type="button" onclick="stepMetric('reject', 1)" class="w-8 h-8 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 font-mono-num cursor-pointer">+</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- RINCIAN PER HARI SISWA TERPILIH -->
-      <section class="rounded-2xl bg-[#111622] border border-slate-800/80 p-4 sm:p-5 space-y-4">
-        <div>
-          <h3 class="text-base font-bold text-white">Rincian Capaian &amp; Nilai Per Hari</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Rekapitulasi jadwal kerja 23, 24, 26, dan 27 November 2026[cite: 2, 3]</p>
-        </div>
-
-        <div class="overflow-x-auto rounded-xl border border-slate-800/70">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-[#0B0F17] border-b border-slate-800/70 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                <th class="py-3 px-4">Tanggal</th>
-                <th class="py-3 px-3 text-center">Presensi</th>
-                <th class="py-3 px-3 text-right">Lolos QC</th>
-                <th class="py-3 px-3 text-right">Reject</th>
-                <th class="py-3 px-3 text-right">% Produktivitas</th>
-                <th class="py-3 px-4 text-center">Konversi Nilai</th>
-              </tr>
-            </thead>
-            <tbody id="student-daily-tbody" class="divide-y divide-slate-800/50 text-xs sm:text-sm"></tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+<body data-theme="light">
+<div class="wrap">
+<header>
+  <div>
+    <h1 id="sn">🌿 Calaye Store</h1>
   </div>
+  <nav id="nav"></nav>
+</header>
 
-  <!-- TOAST -->
-  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+<!-- Banner Pengumuman dari Admin -->
+<div id="banner-container"></div>
 
-  <script>
-    const ROOT_REF_PATH = 'tefa_songsong';
-    const LOCAL_STORAGE_KEY = 'tefa_songsong_v1_data';
-    const TARGET_PER_WORKER_STORAGE_KEY = 'tefa_target_per_pekerja';
-    const ACTIVE_PRODUCTION_STAFF_COUNT = 23;
-    const DEFAULT_TARGET_PER_WORKER = 10;
+<main id="app" class="page-transition"></main>
+</div>
+<div id="toast"></div>
 
-    const SCHEDULE_DAYS = [
-      { id: '2026-11-23', shortLabel: '23 Nov 2026', dayName: 'Senin', fullLabel: '23 November 2026' },
-      { id: '2026-11-24', shortLabel: '24 Nov 2026', dayName: 'Selasa', fullLabel: '24 November 2026' },
-      { id: '2026-11-26', shortLabel: '26 Nov 2026', dayName: 'Kamis', fullLabel: '26 November 2026' },
-      { id: '2026-11-27', shortLabel: '27 Nov 2026', dayName: 'Jumat', fullLabel: '27 November 2026' },
-    ];
+<!-- Floating Bubble Keranjang di Bawah -->
+<div id="floating-cart"></div>
 
-    const MANAGEMENT_PERSONNEL = [
-      { presensi: 1, pin: '1001', name: 'Nico', role: 'Manajer Produksi (Ketua Kelas)' },
-      { presensi: 2, pin: '1002', name: 'Rayhan', role: 'Administrator Proyek (Sekretaris)' },
-      { presensi: 3, pin: '1003', name: 'Ais', role: 'Bendahara Proyek (Bendahara)' },
-      { presensi: 4, pin: '1004', name: 'Yuda', role: 'Stok Opname Barang' },
-      { presensi: 5, pin: '1005', name: 'Alba', role: 'Stok Opname Barang' },
-      { presensi: 6, pin: '1006', name: 'Kifah', role: 'Kepala Unit Produksi' },
-      { presensi: 7, pin: '1007', name: 'Thalita', role: 'Quality Control' },
-      { presensi: 8, pin: '1008', name: 'Alpan', role: 'Quality Control' },
-      { presensi: 9, pin: '1009', name: 'Putra', role: 'Pengemasan dan Pengiriman' },
-      { presensi: 10, pin: '1010', name: 'Hidan', role: 'Pengemasan dan Pengiriman' },
-      { presensi: 11, pin: '1011', name: 'Isa', role: 'Penanggung Jawab 5R' },
-      { presensi: 12, pin: '1012', name: 'Safa', role: 'Penanggung Jawab 5R' },
-    ];
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, addDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    const PRODUCTION_WORKERS = [
-      { index: 0, presensi: 13, name: 'Rhino', pin: '2001' },
-      { index: 1, presensi: 14, name: 'Redi', pin: '2002' },
-      { index: 2, presensi: 15, name: 'Rafa', pin: '2003' },
-      { index: 3, presensi: 16, name: 'Aqim', pin: '2004' },
-      { index: 4, presensi: 17, name: 'Raihan', pin: '2005' },
-      { index: 5, presensi: 18, name: 'Fajar', pin: '2006' },
-      { index: 6, presensi: 19, name: 'Embun', pin: '2007' },
-      { index: 7, presensi: 20, name: 'Nazwa', pin: '2008' },
-      { index: 8, presensi: 21, name: 'Dea', pin: '2009' },
-      { index: 9, presensi: 22, name: 'Alvi', pin: '2010' },
-      { index: 10, presensi: 23, name: 'Ziva', pin: '2011' },
-      { index: 11, presensi: 24, name: 'Cyrilla', pin: '2012' },
-      { index: 12, presensi: 25, name: 'Neysa', pin: '2013' },
-      { index: 13, presensi: 26, name: 'Akmal', pin: '2014' },
-      { index: 14, presensi: 27, name: 'Milo', pin: '2015' },
-      { index: 15, presensi: 28, name: 'Tegar', pin: '2016' },
-      { index: 16, presensi: 29, name: 'Vika', pin: '2017' },
-      { index: 17, presensi: 30, name: 'Aul', pin: '2018' },
-      { index: 18, presensi: 31, name: 'Ilham Daniswara', pin: '2019' },
-      { index: 19, presensi: 32, name: 'Ilham Bayu', pin: '2020' },
-      { index: 20, presensi: 33, name: 'Damar', pin: '2021' },
-      { index: 21, presensi: 34, name: 'Sakti', pin: '2022' },
-      { index: 22, presensi: 35, name: 'Hafidz', pin: '2023' },
-    ];
+const firebaseConfig = {
+  apiKey: "AIzaSyAk3iZuyjIrexLN1UQ-HMW2CuwoOG2Ivhw",
+  authDomain: "calayestore.firebaseapp.com",
+  projectId: "calayestore",
+  storageBucket: "calayestore.appspot.com",
+  messagingSenderId: "1053043880481",
+  appId: "1:1053043880481:web:bb5886b0ac92ec5338e960"
+};
 
-    const ALL_STUDENTS = [
-      ...PRODUCTION_WORKERS.map((w) => ({
-        id: `worker:${w.index}`,
-        isWorker: true,
-        workerIndex: w.index,
-        presensi: w.presensi,
-        name: w.name,
-        pin: w.pin,
-        role: 'Staf Unit Produksi',
-      })),
-      ...MANAGEMENT_PERSONNEL.map((p) => ({
-        id: `mgmt:${p.pin}`,
-        isWorker: false,
-        workerIndex: null,
-        presensi: p.presensi,
-        name: p.name,
-        pin: p.pin,
-        role: p.role,
-      })),
-    ];
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    let isFirebaseConnected = false;
-    let dbRef = null;
-    let selectedStudentId = ALL_STUDENTS[0].id;
-    let selectedPeriod = 'ALL_4_DAYS';
+let DB = {
+  settings: { name: 'Calaye Store', wa: '6281234567890' },
+  announcement: { text: '', active: false },
+  maintenance: {
+    active: false,
+    title: 'Web Sedang Ditutup Sementara',
+    message: 'Toko sedang dalam pemeliharaan oleh admin. Silakan kembali beberapa saat lagi.'
+  },
+  coupons: [],
+  products: []
+};
 
-    function sanitizeTargetPerWorker(val, fallback = DEFAULT_TARGET_PER_WORKER) {
-      const num = Number(val);
-      if (Number.isFinite(num) && num > 0) return Math.round(num);
-      return fallback;
-    }
+let view = 'shop', cat = 'Semua', searchQuery = '', cart = {}, sel = {}, last = null, coupon = '', selectedPay = 'QRIS';
+let selectedProduct = null;
+let unsubscribeOrderStatus = null;
 
-    function readTargetFromStorage(fallback = DEFAULT_TARGET_PER_WORKER) {
-      try {
-        const raw = localStorage.getItem(TARGET_PER_WORKER_STORAGE_KEY);
-        if (raw !== null && raw !== '') {
-          return sanitizeTargetPerWorker(JSON.parse(raw), fallback);
-        }
-      } catch (_) {}
-      return fallback;
-    }
+const $ = id => document.getElementById(id);
+const rp = n => 'Rp' + Number(n || 0).toLocaleString('id-ID');
+const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const cartN = () => Object.values(cart).reduce((a, b) => a + b, 0);
+const nm = () => (DB.settings && DB.settings.name) ? DB.settings.name : 'Calaye Store';
+const isWebDisabled = () => Boolean(DB.maintenance && DB.maintenance.active);
 
-    function getTargetPerWorker() {
-      const fromMeta = dbState?.meta?.targetPerPekerja;
-      if (Number(fromMeta) > 0) return sanitizeTargetPerWorker(fromMeta, DEFAULT_TARGET_PER_WORKER);
-      const targetKelas = Number(dbState?.meta?.targetHarianKelas);
-      if (targetKelas > 0) return Math.max(1, Math.ceil(targetKelas / ACTIVE_PRODUCTION_STAFF_COUNT));
-      return readTargetFromStorage(DEFAULT_TARGET_PER_WORKER);
-    }
+function toast(m) {
+  const t = $('toast');
+  if (t) {
+    t.innerHTML = `<div class="toast">${esc(m)}</div>`;
+    setTimeout(() => t.innerHTML = '', 2200);
+  }
+}
 
-    function createDefaultDayData() {
-      const attendance = {};
-      MANAGEMENT_PERSONNEL.forEach((p) => (attendance[p.pin] = 'Hadir'));
-      PRODUCTION_WORKERS.forEach((w) => (attendance[w.pin] = 'Hadir'));
-      const workers = {};
-      PRODUCTION_WORKERS.forEach((w) => {
-        workers[String(w.index)] = {
-          lolos: 0,
-          reject: 0,
-          waktuMulai: '07:30',
-          waktuSelesai: '15:00',
-          durasiMenit: 450,
-        };
-      });
-      return {
-        jamMulai: '07:30',
-        jamSelesai: '15:00',
-        stokAmbil: 0,
-        stokSetor: 0,
-        stokCatatan: '',
-        packingVerified: 0,
-        fiveR: [false, false, false, false, false],
-        catatan5R: '',
-        kasPemasukan: 0,
-        kasPengeluaran: 0,
-        kasKeterangan: '',
-        linkVideo: '',
-        catatanAdmin: '',
-        logPelanggaranTab: [],
-        attendance,
-        workers,
-      };
-    }
+window.toggleTheme = function() {
+  const body = document.body;
+  const current = body.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  body.setAttribute('data-theme', next);
+  toast(next === 'dark' ? '🌙 Dark Mode Hijau Aktif' : '☀️ Light Mode Hijau Aktif');
+};
 
-    function normalizeDatabase(raw) {
-      const targetPerPekerja = sanitizeTargetPerWorker(
-        raw?.meta?.targetPerPekerja ?? readTargetFromStorage(DEFAULT_TARGET_PER_WORKER),
-        DEFAULT_TARGET_PER_WORKER
-      );
-      const days = {};
-      SCHEDULE_DAYS.forEach((d) => {
-        const defDay = createDefaultDayData();
-        const rawDay = raw?.days?.[d.id] || {};
-        const workers = { ...defDay.workers };
-        PRODUCTION_WORKERS.forEach((w) => {
-          const k = String(w.index);
-          const rw = rawDay.workers?.[k] || rawDay.workers?.[w.index] || {};
-          workers[k] = {
-            ...defDay.workers[k],
-            lolos: Math.max(0, Number(rw.lolos) || 0),
-            reject: Math.max(0, Number(rw.reject) || 0),
-          };
-        });
-        days[d.id] = {
-          ...defDay,
-          ...rawDay,
-          attendance: { ...defDay.attendance, ...(rawDay.attendance || {}) },
-          workers,
-          logPelanggaranTab: Array.isArray(rawDay.logPelanggaranTab)
-            ? rawDay.logPelanggaranTab
-            : rawDay.logPelanggaranTab && typeof rawDay.logPelanggaranTab === 'object'
-            ? Object.values(rawDay.logPelanggaranTab)
-            : [],
-        };
-      });
-
-      return {
-        meta: {
-          kelas: raw?.meta?.kelas || 'X TE 2',
-          ruang: raw?.meta?.ruang || 'Ruang 84',
-          instruktur: raw?.meta?.instruktur || '',
-          targetPerPekerja,
-          targetHarianKelas:
-            Number(raw?.meta?.targetHarianKelas) > 0
-              ? Number(raw.meta.targetHarianKelas)
-              : targetPerPekerja * ACTIVE_PRODUCTION_STAFF_COUNT,
-        },
-        days,
-      };
-    }
-
-    let dbState = normalizeDatabase(
-      (() => {
-        try {
-          const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-          return saved ? JSON.parse(saved) : null;
-        } catch (_) {
-          return null;
-        }
-      })()
-    );
-
-    // Rumus sama persis dengan admin-fleksibel
-    function calculateWorkerGrade(lolos, reject) {
-      const l = Number(lolos) || 0;
-      const r = Number(reject) || 0;
-      const targetPerPekerja = getTargetPerWorker();
-
-      if (l === 0 && r === 0) return { label: '-', badgeClass: 'bg-slate-800/70 text-slate-400' };
-      if (l > targetPerPekerja && r === 0) return { label: '100', badgeClass: 'bg-emerald-500/15 text-emerald-400' };
-      if (l > targetPerPekerja && r > 0) return { label: '96', badgeClass: 'bg-sky-500/15 text-sky-400' };
-      if (l === targetPerPekerja && r === 0) return { label: '86', badgeClass: 'bg-teal-500/15 text-teal-300' };
-      if (l === targetPerPekerja && r > 0) return { label: '76', badgeClass: 'bg-amber-500/15 text-amber-300' };
-      return { label: 'Tidak KKM', badgeClass: 'bg-red-500/15 text-red-400' };
-    }
-
-    function calculateProductivityPercent(lolos) {
-      const l = Number(lolos) || 0;
-      const targetPerPekerja = getTargetPerWorker();
-      const denominator = targetPerPekerja * 1.5;
-      if (denominator <= 0) return '0.0%';
-      return ((l / denominator) * 100).toFixed(1) + '%';
-    }
-
-    function populateStudentDropdown(filterText = '') {
-      const q = (filterText || '').trim().toLowerCase();
-      const selectEl = document.getElementById('student-select');
-      const filtered = ALL_STUDENTS.filter(
-        (s) =>
-          !q ||
-          s.name.toLowerCase().includes(q) ||
-          String(s.presensi).includes(q) ||
-          s.pin.includes(q)
-      );
-
-      const listToRender = filtered.length > 0 ? filtered : ALL_STUDENTS;
-      selectEl.innerHTML = listToRender
-        .map(
-          (s) =>
-            `<option value="${s.id}" ${s.id === selectedStudentId ? 'selected' : ''}>#${s.presensi} — ${s.name} (${s.isWorker ? 'Produksi' : 'Tim'})</option>`
-        )
-        .join('');
-
-      if (!listToRender.some((s) => s.id === selectedStudentId)) {
-        selectedStudentId = listToRender[0].id;
-        selectEl.value = selectedStudentId;
+onSnapshot(doc(db, "store", "config"), (docSnap) => {
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    DB = {
+      ...DB,
+      ...data,
+      maintenance: {
+        active: false,
+        title: 'Web Sedang Ditutup Sementara',
+        message: 'Toko sedang dalam pemeliharaan oleh admin. Silakan kembali beberapa saat lagi.',
+        ...(data.maintenance || {})
       }
-    }
+    };
+    render();
+  }
+});
 
-    function filterStudentDropdown(val) {
-      populateStudentDropdown(val);
-      renderPortal();
-    }
+function triggerAnimation() {
+  const appEl = $('app');
+  if (appEl) {
+    appEl.classList.remove('page-transition');
+    void appEl.offsetWidth;
+    appEl.classList.add('page-transition');
+  }
+}
 
-    function onStudentChange(id) {
-      selectedStudentId = id;
-      renderPortal();
-    }
+function go(v) {
+  if (isWebDisabled()) {
+    render();
+    return;
+  }
+  if (v !== 'cart' && unsubscribeOrderStatus) unsubscribeOrderStatus();
+  view = v; selectedProduct = null; last = null; render();
+  triggerAnimation();
+}
+window.go = go;
 
-    function onPeriodChange(val) {
-      selectedPeriod = val;
-      renderPortal();
-    }
+window.openDetail = function(productId) {
+  if (isWebDisabled()) {
+    render();
+    return;
+  }
+  const p = (DB.products || []).find(x => x.id === productId);
+  if (p) {
+    selectedProduct = p;
+    view = 'detail';
+    render();
+    triggerAnimation();
+  }
+};
 
-    function getStudentStats(student) {
-      if (!student.isWorker) {
-        return {
-          lolos: 0,
-          reject: 0,
-          prodPct: '-',
-          grade: { label: '-', badgeClass: 'bg-slate-800/70 text-slate-400' },
-          attendance:
-            selectedPeriod === 'ALL_4_DAYS'
-              ? SCHEDULE_DAYS.map((d) => dbState.days[d.id]?.attendance?.[student.pin] || 'Hadir').join(' • ')
-              : dbState.days[selectedPeriod]?.attendance?.[student.pin] || 'Hadir',
-        };
-      }
+function maintenanceView() {
+  const m = DB.maintenance || {};
+  const title = m.title || 'Web Sedang Ditutup Sementara';
+  const message = m.message || 'Toko sedang dalam pemeliharaan oleh admin. Silakan kembali beberapa saat lagi.';
+  const targetWA = (DB.settings && DB.settings.wa) ? DB.settings.wa.replace(/\D/g, '') : '';
+  const waHref = targetWA
+    ? `https://wa.me/${targetWA}?text=${encodeURIComponent(`Halo Admin ${nm()}, saya ingin menanyakan info toko.`)}`
+    : '';
 
-      const key = String(student.workerIndex);
-      if (selectedPeriod === 'ALL_4_DAYS') {
-        let accLolos = 0;
-        let accReject = 0;
-        SCHEDULE_DAYS.forEach((d) => {
-          const wData = dbState.days[d.id]?.workers?.[key] || { lolos: 0, reject: 0 };
-          accLolos += Number(wData.lolos) || 0;
-          accReject += Number(wData.reject) || 0;
-        });
-        const avgLolos = accLolos / 4;
-        const avgReject = accReject / 4;
-        return {
-          lolos: accLolos,
-          reject: accReject,
-          avgLolos,
-          avgReject,
-          prodPct: calculateProductivityPercent(avgLolos),
-          grade: calculateWorkerGrade(Math.round(avgLolos), Math.round(avgReject)),
-          attendance: '4 Hari Aktif',
-        };
-      }
+  return `
+    <div class="card maintenance-box">
+      <div class="maintenance-icon">🌿🔒</div>
+      <span class="badge bad" style="display:inline-block; margin-bottom:10px;">OFFLINE / MAINTENANCE</span>
+      <h2 style="margin:6px 0 10px; font-size:21px; font-weight:800;">${esc(title)}</h2>
+      <p class="desc-detail" style="text-align:center; max-width:480px; margin:12px auto 20px;">${esc(message)}</p>
+      ${waHref ? `<a class="btn pri" style="display:inline-block; text-decoration:none; padding:11px 20px;" href="${waHref}" target="_blank" rel="noopener">Hubungi Admin WhatsApp</a>` : ''}
+    </div>
+  `;
+}
 
-      const day = dbState.days[selectedPeriod] || createDefaultDayData();
-      const wData = day.workers?.[key] || { lolos: 0, reject: 0 };
-      const lolos = Number(wData.lolos) || 0;
-      const reject = Number(wData.reject) || 0;
-      return {
-        lolos,
-        reject,
-        prodPct: calculateProductivityPercent(lolos),
-        grade: calculateWorkerGrade(lolos, reject),
-        attendance: day.attendance?.[student.pin] || 'Hadir',
-      };
-    }
+function render() {
+  document.title = nm();
+  if ($('sn')) $('sn').innerHTML = '<svg class="clove-logo" width="26" height="26" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="clv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#10b981"/><stop offset="1" stop-color="#059669"/></linearGradient></defs><path d="M12 1.5C5.5 8 5 16 12 22.5C19 16 18.5 8 12 1.5Z" fill="url(#clv)"/><path d="M12 4.5V20" stroke="#f4fbf7" stroke-width="1" stroke-linecap="round" opacity="0.7"/><path d="M12 9l-3.2 2.8M12 9l3.2 2.8M12 14l-2.6 2.4M12 14l2.6 2.4" stroke="#f4fbf7" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/></svg><span>' + esc(nm()) + '</span>';
 
-    function renderPortal() {
-      const targetPerPekerja = getTargetPerWorker();
-      const capProd = Number((targetPerPekerja * 1.5).toFixed(2));
-      const student = ALL_STUDENTS.find((s) => s.id === selectedStudentId) || ALL_STUDENTS[0];
+  const disabled = isWebDisabled();
+  const isDark = document.body.getAttribute('data-theme') === 'dark';
 
-      document.getElementById('header-target-worker').textContent = `${targetPerPekerja} pcs/siswa`;
-      document.getElementById('meta-kelas').textContent = dbState.meta.kelas;
-      document.getElementById('meta-ruang').textContent = dbState.meta.ruang;
-      document.getElementById('formula-text').textContent = `(Lolos QC / ${capProd}) × 100%`;
-      document.getElementById('rule-target-val').textContent = String(targetPerPekerja);
+  const bannerEl = $('banner-container');
+  if (!disabled && DB.announcement && DB.announcement.active && DB.announcement.text) {
+    bannerEl.innerHTML = `<div class="announcement-banner">🌻 <span>${esc(DB.announcement.text)}</span></div>`;
+  } else {
+    bannerEl.innerHTML = '';
+  }
 
-      document.getElementById('rule-list').innerHTML = `
-        <div class="p-2 rounded-lg bg-[#111622] border border-slate-800/70">Lolos &gt; ${targetPerPekerja}, Reject = 0 &rarr; <strong class="text-emerald-400">100</strong></div>
-        <div class="p-2 rounded-lg bg-[#111622] border border-slate-800/70">Lolos &gt; ${targetPerPekerja}, Reject &gt; 0 &rarr; <strong class="text-sky-400">96</strong></div>
-        <div class="p-2 rounded-lg bg-[#111622] border border-slate-800/70">Lolos = ${targetPerPekerja}, Reject = 0 &rarr; <strong class="text-teal-300">86</strong></div>
-        <div class="p-2 rounded-lg bg-[#111622] border border-slate-800/70">Lolos = ${targetPerPekerja}, Reject &gt; 0 &rarr; <strong class="text-amber-300">76</strong></div>
-        <div class="p-2 rounded-lg bg-[#111622] border border-slate-800/70">Lolos &lt; ${targetPerPekerja} &rarr; <strong class="text-red-400">Tidak KKM</strong></div>
+  if ($('nav')) {
+    if (disabled) {
+      $('nav').innerHTML = `
+        <button class="btn sm" onclick="window.toggleTheme()">${isDark ? '☀️' : '🌙'}</button>
       `;
+    } else {
+      $('nav').innerHTML = `
+        <button class="btn sm ${view === 'shop' ? 'on' : ''}" onclick="window.go('shop')">Katalog</button>
+        <button class="btn sm ${view === 'cart' ? 'on' : ''}" onclick="window.go('cart')">Keranjang${cartN() ? ' (' + cartN() + ')' : ''}</button>
+        <button class="btn sm" onclick="window.toggleTheme()">${isDark ? '☀️' : '🌙'}</button>
+      `;
+    }
+  }
 
-      document.getElementById('student-presensi-badge').textContent = `#${student.presensi}`;
-      document.getElementById('student-name-display').textContent = student.name;
-      document.getElementById('student-role-display').textContent = `${student.role} • PIN ${student.pin}`;
+  const app = $('app');
+  if (app) {
+    if (disabled) {
+      app.innerHTML = maintenanceView();
+    } else if (view === 'shop') {
+      app.innerHTML = shop();
+    } else if (view === 'detail') {
+      app.innerHTML = detailProduct();
+    } else if (view === 'cart') {
+      app.innerHTML = cartV();
+    }
+  }
 
-      const stats = getStudentStats(student);
-      document.getElementById('student-attendance-badge').textContent = stats.attendance;
+  renderFloatingCart();
+}
 
-      if (!student.isWorker) {
-        document.getElementById('val-lolos').textContent = '-';
-        document.getElementById('sub-lolos').textContent = 'Non-staf unit produksi';
-        document.getElementById('val-reject').textContent = '-';
-        document.getElementById('sub-reject').textContent = 'Non-staf unit produksi';
-        document.getElementById('val-prod').textContent = '-';
-        document.getElementById('sub-prod').textContent = 'Khusus staf #13–#35';
-        const gradeEl = document.getElementById('val-grade');
-        gradeEl.className = 'inline-block px-3 py-1 rounded-lg text-sm font-bold font-mono-num bg-slate-800 text-slate-400';
-        gradeEl.textContent = 'Koordinator';
-        document.getElementById('sub-grade').textContent = student.role;
-        document.getElementById('worker-input-box').classList.add('hidden');
-      } else {
-        const totalUnit = stats.lolos + stats.reject;
-        const rasioReject = totalUnit > 0 ? ((stats.reject / totalUnit) * 100).toFixed(1) : '0.0';
+function renderFloatingCart() {
+  const floating = $('floating-cart');
+  if (!floating) return;
+  if (isWebDisabled()) {
+    floating.innerHTML = '';
+    return;
+  }
+  const count = cartN();
+  if (count > 0 && view !== 'cart') {
+    let subtotal = 0;
+    Object.keys(cart).forEach(i => { const f = findVar(i); if(f) subtotal += f.v.price * cart[i]; });
 
-        document.getElementById('val-lolos').textContent = `${stats.lolos} pcs`;
-        document.getElementById('sub-lolos').textContent =
-          selectedPeriod === 'ALL_4_DAYS'
-            ? `Rata-rata: ${stats.avgLolos.toFixed(2)} pcs/hr (Target ${targetPerPekerja})`
-            : `Target: ${targetPerPekerja} pcs`;
+    floating.innerHTML = `
+      <div class="cart-bubble" onclick="window.go('cart')">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="background:#fff; color:var(--acc); padding:4px 10px; border-radius:99px; font-size:12px;">🛒 ${count} Item</span>
+          <span>Buka Keranjang</span>
+        </div>
+        <span>${rp(subtotal)} →</span>
+      </div>`;
+  } else {
+    floating.innerHTML = '';
+  }
+}
 
-        document.getElementById('val-reject').textContent = `${stats.reject} unit`;
-        document.getElementById('sub-reject').textContent = `Rasio Reject: ${rasioReject}%`;
+function shop() {
+  const cats = ['Semua', ...new Set((DB.products || []).map(p => p.cat || 'Lainnya'))];
+  const list = (DB.products || []).filter(p => (cat === 'Semua' || p.cat === cat) && (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()));
 
-        document.getElementById('val-prod').textContent = stats.prodPct;
-        document.getElementById('sub-prod').textContent = `Batas 100%: ${capProd} pcs`;
-
-        const gradeEl = document.getElementById('val-grade');
-        gradeEl.className = `inline-block px-3 py-1 rounded-lg text-lg font-bold font-mono-num ${stats.grade.badgeClass}`;
-        gradeEl.textContent = stats.grade.label;
-        document.getElementById('sub-grade').textContent =
-          selectedPeriod === 'ALL_4_DAYS'
-            ? `Dari rata-rata ${Math.round(stats.avgLolos)} pcs/hr • KKM 76`
-            : 'KKM: 76';
-
-        const inputBox = document.getElementById('worker-input-box');
-        if (selectedPeriod === 'ALL_4_DAYS') {
-          inputBox.classList.add('hidden');
-        } else {
-          inputBox.classList.remove('hidden');
-          document.getElementById('input-day-label').textContent = selectedPeriod;
-          document.getElementById('input-lolos').value = stats.lolos;
-          document.getElementById('input-reject').value = stats.reject;
-        }
-      }
-
-      // Render tabel rincian 4 hari
-      const tbody = document.getElementById('student-daily-tbody');
-      tbody.innerHTML = SCHEDULE_DAYS.map((d) => {
-        const day = dbState.days[d.id] || createDefaultDayData();
-        const absen = day.attendance?.[student.pin] || 'Hadir';
-        if (!student.isWorker) {
-          return `
-            <tr>
-              <td class="py-2.5 px-4 font-medium text-white">${d.dayName}, ${d.fullLabel}</td>
-              <td class="py-2.5 px-3 text-center font-mono-num text-xs text-slate-300">${absen}</td>
-              <td class="py-2.5 px-3 text-right font-mono-num text-slate-500">-</td>
-              <td class="py-2.5 px-3 text-right font-mono-num text-slate-500">-</td>
-              <td class="py-2.5 px-3 text-right font-mono-num text-slate-500">-</td>
-              <td class="py-2.5 px-4 text-center font-mono-num text-xs text-slate-500">Tim Inti</td>
-            </tr>
-          `;
-        }
-        const wData = day.workers?.[String(student.workerIndex)] || { lolos: 0, reject: 0 };
-        const l = Number(wData.lolos) || 0;
-        const r = Number(wData.reject) || 0;
-        const pct = calculateProductivityPercent(l);
-        const gr = calculateWorkerGrade(l, r);
+  return `
+    <div style="margin-bottom:12px;">
+      <input type="text" placeholder="🔍 Cari aplikasi premium..." value="${esc(searchQuery)}" oninput="window.setSearch(this.value)">
+    </div>
+    <div class="chips">
+      ${cats.map(c => `<button class="btn sm ${c === cat ? 'on' : ''}" onclick="window.setCat('${esc(c)}')">${esc(c)}</button>`).join('')}
+    </div>
+    <div class="grid">
+      ${list.length ? list.map((p, index) => {
+        const variants = p.variants || [];
+        const off = p.status !== 'tersedia' || variants.every(v => (v.stock || 0) < 1);
+        const cur = variants.find(v => v.id === sel[p.id]) || variants.find(v => (v.stock || 0) > 0) || variants[0];
+        const delay = (index * 0.08).toFixed(2);
 
         return `
-          <tr class="hover:bg-slate-800/30">
-            <td class="py-2.5 px-4 font-medium text-white">${d.dayName}, ${d.fullLabel}</td>
-            <td class="py-2.5 px-3 text-center font-mono-num text-xs text-slate-300">${absen}</td>
-            <td class="py-2.5 px-3 text-right font-mono-num font-semibold text-emerald-400">${l} pcs</td>
-            <td class="py-2.5 px-3 text-right font-mono-num font-semibold text-red-400">${r} unit</td>
-            <td class="py-2.5 px-3 text-right font-mono-num text-sky-400">${pct}</td>
-            <td class="py-2.5 px-4 text-center">
-              <span class="inline-block px-2.5 py-0.5 rounded-md text-xs font-mono-num font-semibold ${gr.badgeClass}">${gr.label}</span>
-            </td>
-          </tr>
-        `;
-      }).join('');
+          <div class="card-glow-wrap" style="animation-delay: ${delay}s">
+            <div class="card sticky" onclick="window.openDetail('${p.id}')">
+              <div class="washi-tape"></div>
+              ${p.img ? `<img src="${esc(p.img)}" class="prod-img" alt="${esc(p.name)}">` : ''}
+              <div class="row">
+                <h3>${esc(p.name)}</h3>
+                <span class="badge ${off ? 'bad' : 'ok'}">${off ? 'Habis' : 'Tersedia'}</span>
+              </div>
+              <div class="mute">${esc(p.cat)}</div>
+              ${cur ? `
+                <div class="row" style="margin-top:12px;">
+                  <div>
+                    <div class="price" style="font-size:15px;">${rp(cur.price)}</div>
+                    <div class="mute">Mulai dari</div>
+                  </div>
+                  <span class="btn sm pri">Pilih Produk →</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>`;
+      }).join('') : '<div class="card" style="grid-column:span 2;text-align:center;color:var(--mute)">Produk tidak ditemukan</div>'}
+    </div>`;
+}
 
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+function detailProduct() {
+  if (!selectedProduct) return '<div class="card" style="text-align:center">Produk tidak ditemukan</div>';
+  const p = selectedProduct;
+  const variants = p.variants || [];
+  const off = p.status !== 'tersedia' || variants.every(v => (v.stock || 0) < 1);
+  const cur = variants.find(v => v.id === sel[p.id]) || variants.find(v => (v.stock || 0) > 0) || variants[0];
+
+  return `
+    <div class="card" style="cursor:default; position:relative;">
+      <div class="washi-tape" style="left:40px; transform:rotate(-6deg);"></div>
+      <button class="btn sm" onclick="window.go('shop')" style="margin-bottom:12px;">← Kembali ke Katalog</button>
+
+      ${p.img ? `<img src="${esc(p.img)}" class="prod-img-detail" alt="${esc(p.name)}">` : ''}
+
+      <div class="row">
+        <h2 style="margin:0; font-size:20px; font-weight:800;">${esc(p.name)}</h2>
+        <span class="badge ${off ? 'bad' : 'ok'}">${off ? 'Habis' : 'Tersedia'}</span>
+      </div>
+      <div class="mute" style="margin-top:2px;">Kategori: ${esc(p.cat)}</div>
+
+      <!-- Deskripsi Penuh dengan format spasi/enter -->
+      ${p.desc ? `<div class="desc-detail">${esc(p.desc)}</div>` : '<div class="desc-detail" style="opacity:0.5">Aplikasi premium bergaransi resmi.</div>'}
+
+      <div style="font-size:13px; font-weight:700; margin-bottom:6px;">Pilih Varian Durasi:</div>
+      <div class="vs" style="margin-bottom:16px;">
+        ${variants.map(v => `<button class="v ${cur && v.id === cur.id ? 'on' : ''}" ${(v.stock || 0) < 1 ? 'disabled' : ''} onclick="window.setSel('${p.id}','${v.id}'); window.openDetail('${p.id}')">${esc(v.label)}</button>`).join('')}
+      </div>
+
+      ${cur ? `
+        <div class="row" style="background:var(--bg1); padding:14px; border-radius:14px; border:1px solid var(--line);">
+          <div>
+            <div class="price">${rp(cur.price)}</div>
+            <div class="mute">Stok tersedia: ${cur.stock || 0}</div>
+          </div>
+          <button class="btn pri" ${off || (cur.stock || 0) < 1 ? 'disabled' : ''} onclick="window.add('${cur.id}')">+ Masukkan Keranjang</button>
+        </div>
+      ` : ''}
+    </div>`;
+}
+
+function findVar(vid) {
+  for (const p of (DB.products || [])) {
+    if (p.variants) {
+      const v = p.variants.find(x => x.id === vid);
+      if (v) return { p, v };
     }
+  }
+  return null;
+}
 
-    function persistStudentEdit() {
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dbState));
-      } catch (_) {}
-      if (isFirebaseConnected && dbRef) {
-        dbRef.set(dbState).catch(() => {});
+function add(id) {
+  if (isWebDisabled()) { render(); return; }
+  const f = findVar(id);
+  if (!f) return;
+  if ((cart[id] || 0) >= f.v.stock) { toast('Stok tidak cukup!'); return; }
+  cart[id] = (cart[id] || 0) + 1;
+  toast(f.p.name + ' ditambahkan ke keranjang 🛒');
+  render();
+}
+
+function qty(id, d) {
+  if (isWebDisabled()) { render(); return; }
+  const f = findVar(id);
+  if (!f) { delete cart[id]; render(); return; }
+  const n = (cart[id] || 0) + d;
+  if (n <= 0) delete cart[id];
+  else if (n > f.v.stock) { toast('Stok tidak cukup!'); return; }
+  else cart[id] = n;
+  render();
+}
+
+window.setPay = function(m) {
+  selectedPay = m;
+  document.querySelectorAll('.pay-opt').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('pay-' + m);
+  if(target) target.classList.add('active');
+};
+
+function cartV() {
+  if (last) {
+    const isSuccess = last.status === 'SUCCESS' || last.status === 'Selesai';
+    return `
+      <div class="card" style="text-align:center;padding:32px 20px; cursor:default;">
+        ${isSuccess ? `
+          <div class="success-icon">🎉</div>
+          <h2 style="color:var(--ok); margin-bottom:6px">Pembayaran Berhasil!</h2>
+          <p class="mute">Pesanan Anda telah dikonfirmasi oleh Admin.</p>
+          <div style="background:rgba(16,185,129,0.08); border:1px solid var(--ok); padding:14px; border-radius:14px; margin:16px 0;">
+            <b>Kode Order: ${last.code}</b><br>
+            <span class="badge ok" style="margin-top:6px; display:inline-block;">STATUS: LUNAS</span>
+          </div>
+        ` : `
+          <div class="success-icon">⏳</div>
+          <h3 style="color:var(--acc); margin-bottom:4px">Menunggu Konfirmasi Admin</h3>
+          <p class="mute">Silakan kirim konfirmasi pesanan ke WhatsApp admin.</p>
+          <div style="border:1px solid var(--line); padding:14px; border-radius:14px; margin:16px 0;">
+            <b>Kode Order: ${last.code}</b><br>
+            <span class="badge bad" style="margin-top:6px; display:inline-block;">STATUS: MENUNGGU PEMBAYARAN</span>
+          </div>
+        `}
+
+        <a class="btn pri" style="display:block;text-decoration:none;text-align:center;padding:12px;margin-top:12px;" href="${last.url}" target="_blank" rel="noopener">Kirim Chat ke WhatsApp 🚀</a>
+        <div style="margin-top:16px"><button class="btn sm" onclick="window.go('shop')">← Kembali ke Katalog</button></div>
+      </div>`;
+  }
+
+  const ids = Object.keys(cart);
+  if (!ids.length) return '<div class="card" style="text-align:center;padding:40px; cursor:default;"><p class="mute">Keranjang belanjaan kamu masih kosong.</p><button class="btn pri sm sp" onclick="window.go(\'shop\')">Lihat Katalog</button></div>';
+
+  let subtotal = 0;
+  ids.forEach(i => { const f = findVar(i); if (f) subtotal += f.v.price * cart[i]; });
+
+  let discount = 0, discName = '';
+  const coupons = DB.coupons || [];
+  const cObj = coupons.find(x => (x.code || '').toUpperCase() === coupon.trim().toUpperCase());
+  if (cObj) {
+    discount = cObj.type === 'percent' ? subtotal * (cObj.val / 100) : cObj.val;
+    discName = `Diskon (${cObj.code})`;
+  }
+  const total = Math.max(0, subtotal - discount);
+
+  return `
+    <div class="card" style="cursor:default;">
+      <button class="btn sm" onclick="window.go('shop')" style="margin-bottom:12px;">← Lanjut Belanja</button>
+      <h3>Keranjang Belanja 🛒</h3>
+      ${ids.map(i => {
+        const f = findVar(i);
+        if (!f) return '';
+        return `
+          <div class="row sp" style="border-bottom:1px solid var(--line); padding-bottom:8px;">
+            <div>
+              <b>${esc(f.p.name)}</b>
+              <div class="mute">${esc(f.v.label)} · ${rp(f.v.price)}</div>
+            </div>
+            <div class="row">
+              <button class="btn sm" onclick="window.qty('${i}',-1)">−</button>
+              <b style="min-width:20px;text-align:center">${cart[i]}</b>
+              <button class="btn sm" onclick="window.qty('${i}',1)">+</button>
+            </div>
+          </div>`;
+      }).join('')}
+      <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+      <div class="row"><span class="mute">Subtotal</span><span>${rp(subtotal)}</span></div>
+      ${discount > 0 ? `<div class="row mute" style="color:var(--ok)"><span>${discName}</span><span>-${rp(discount)}</span></div>` : ''}
+      <div class="row sp" style="font-size:16px;"><b>Total Bayar</b><span class="price">${rp(total)}</span></div>
+
+      <div class="sp row" style="gap:6px">
+        <input style="flex:1" placeholder="Kode Kupon (Opsional)" value="${esc(coupon)}" oninput="window.setCoupon(this.value)">
+        <button class="btn sm" onclick="window.render()">Pakai</button>
+      </div>
+
+      <div class="sp"><input id="cn" placeholder="Nama Lengkap Anda"></div>
+      <div class="sp"><input id="cw" inputmode="tel" placeholder="Nomor WhatsApp (Contoh: 08123456789)"></div>
+
+      <!-- Pilihan Metode Pembayaran E-Wallet -->
+      <div class="sp">
+        <label class="mute" style="display:block; margin-bottom:6px; font-weight:700;">Metode Pembayaran:</label>
+        <div class="pay-grid">
+          <div class="pay-opt ${selectedPay === 'QRIS' ? 'active' : ''}" id="pay-QRIS" onclick="window.setPay('QRIS')">⚡ QRIS</div>
+          <div class="pay-opt ${selectedPay === 'DANA' ? 'active' : ''}" id="pay-DANA" onclick="window.setPay('DANA')">💙 DANA</div>
+          <div class="pay-opt ${selectedPay === 'GoPay' ? 'active' : ''}" id="pay-GoPay" onclick="window.setPay('GoPay')">💚 GoPay</div>
+        </div>
+      </div>
+
+      <button class="btn pri sp" style="width:100%; padding: 14px;" onclick="window.checkout()">Pesan & Lanjutkan ke WhatsApp 🚀</button>
+    </div>`;
+}
+
+function startRealtimeOrder(docId) {
+  if (unsubscribeOrderStatus) unsubscribeOrderStatus();
+  unsubscribeOrderStatus = onSnapshot(doc(db, "orders", docId), (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      if (data.status === 'SUCCESS' || data.status === 'Selesai') {
+        if (last) last.status = 'SUCCESS';
+        render();
       }
-      renderPortal();
-      showToast('Capaian siswa tersimpan');
     }
+  });
+}
 
-    function stepMetric(metric, delta) {
-      const student = ALL_STUDENTS.find((s) => s.id === selectedStudentId);
-      if (!student || !student.isWorker || selectedPeriod === 'ALL_4_DAYS') return;
-      const day = dbState.days[selectedPeriod];
-      const key = String(student.workerIndex);
-      const curr = day.workers[key] || { lolos: 0, reject: 0 };
-      const nextVal = Math.max(0, (Number(curr[metric]) || 0) + delta);
-      day.workers[key] = { ...curr, [metric]: nextVal };
-      persistStudentEdit();
-    }
+async function checkout() {
+  if (isWebDisabled()) {
+    render();
+    toast('Toko sedang ditutup sementara.');
+    return;
+  }
 
-    function setMetric(metric, rawVal) {
-      const student = ALL_STUDENTS.find((s) => s.id === selectedStudentId);
-      if (!student || !student.isWorker || selectedPeriod === 'ALL_4_DAYS') return;
-      const day = dbState.days[selectedPeriod];
-      const key = String(student.workerIndex);
-      const curr = day.workers[key] || { lolos: 0, reject: 0 };
-      const nextVal = Math.max(0, Number(rawVal) || 0);
-      day.workers[key] = { ...curr, [metric]: nextVal };
-      persistStudentEdit();
-    }
+  const name = $('cn').value.trim();
+  const wa = $('cw').value.replace(/\D/g, '');
 
-    function updateBadge() {
-      const badge = document.getElementById('db-status-badge');
-      if (isFirebaseConnected) {
-        badge.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono-num text-emerald-400 bg-emerald-500/10';
-        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>Firebase Live</span>';
-      } else {
-        badge.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono-num text-amber-400 bg-amber-500/10';
-        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span>LocalStorage Mode</span>';
-      }
-    }
+  if (!name || wa.length < 9) { toast('Lengkapi Nama dan Nomor WhatsApp!'); return; }
 
-    function initFirebase() {
-      if (typeof firebase !== 'undefined' && firebaseConfig?.apiKey && !firebaseConfig.apiKey.includes('YOUR_')) {
-        try {
-          if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-          dbRef = firebase.database().ref(ROOT_REF_PATH);
-          isFirebaseConnected = true;
-          updateBadge();
-          dbRef.on('value', (snap) => {
-            if (snap.val()) {
-              dbState = normalizeDatabase(snap.val());
-              try {
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dbState));
-              } catch (_) {}
-            }
-            renderPortal();
-          });
-          return;
-        } catch (_) {}
-      }
-      isFirebaseConnected = false;
-      updateBadge();
-      renderPortal();
-    }
+  const ids = Object.keys(cart);
+  const d = new Date();
 
-    function showToast(msg) {
-      const container = document.getElementById('toast-container');
-      const el = document.createElement('div');
-      el.className = 'px-3.5 py-2 rounded-xl bg-[#111622] border border-slate-800 text-xs font-medium text-emerald-400 shadow-lg';
-      el.textContent = msg;
-      container.appendChild(el);
-      setTimeout(() => el.remove(), 2000);
-    }
+  const months = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agt', 'sep', 'okt', 'nov', 'des'];
+  const dateStr = `${d.getDate()} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
 
-    document.addEventListener('DOMContentLoaded', () => {
-      populateStudentDropdown();
-      initFirebase();
-      renderPortal();
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    });
-  </script>
+  const code = 'CS-' + String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+
+  const items = ids.map(i => {
+    const f = findVar(i);
+    return { vid: f.v.id, name: f.p.name, label: f.v.label, price: f.v.price, qty: cart[i] };
+  });
+
+  const subtotal = items.reduce((a, b) => a + b.price * b.qty, 0);
+  let discount = 0;
+  const coupons = DB.coupons || [];
+  const cObj = coupons.find(x => (x.code || '').toUpperCase() === coupon.trim().toUpperCase());
+  if (cObj) discount = cObj.type === 'percent' ? subtotal * (cObj.val / 100) : cObj.val;
+  const total = Math.max(0, subtotal - discount);
+
+  const targetWA = (DB.settings && DB.settings.wa) ? DB.settings.wa : '6281234567890';
+  const firstProductName = items.length > 0 ? items[0].name : 'Produk';
+
+  const text = `.° Halo Admin Calaye Store ~ 🌿\n\n======================\nINVOICE PEMESANAN\n======================\n\n🗓️ Tanggal: ${dateStr}\n#${firstProductName}\nKode pemesanan: *${code}*\n☎ No wa: ${wa} (${name})\n\n── RINCIAN PESANAN ──\n` +
+    items.map(x => `› ${x.name} (${x.label})\n${x.qty}× ${rp(x.price)} · ${rp(x.price * x.qty)}`).join('\n') +
+    `\n\n----------------------\n📝 TOTAL: *${rp(total)}*\n----------------------\n\nMETODE PEMBAYARAN: ☑ *${selectedPay}*`;
+
+  const url = 'https://wa.me/' + targetWA + '?text=' + encodeURIComponent(text);
+
+  try {
+    const orderData = {
+      code,
+      name,
+      buyerName: name,
+      wa,
+      buyerPhone: wa,
+      items,
+      product: items.map(x => `${x.name} (${x.label})`).join(', '),
+      variant: items.map(x => x.label).join(', '),
+      total,
+      price: total,
+      status: 'PENDING',
+      paymentMethod: selectedPay,
+      date: d.toLocaleString('id-ID'),
+      createdAt: d.toISOString()
+    };
+
+    const docRef = await addDoc(collection(db, "orders"), orderData);
+
+    cart = {}; coupon = '';
+    last = { code, url, status: 'PENDING', docId: docRef.id };
+    render();
+    startRealtimeOrder(docRef.id);
+    window.open(url, '_blank');
+
+  } catch (err) {
+    alert('Gagal mengirim pesanan: ' + err.message);
+  }
+}
+
+window.add = add;
+window.qty = qty;
+window.checkout = checkout;
+window.render = render;
+window.setCat = (c) => { cat = c; render(); triggerAnimation(); };
+window.setSel = (pid, vid) => { sel[pid] = vid; render(); };
+window.setSearch = (val) => { searchQuery = val; render(); };
+window.setCoupon = (val) => { coupon = val; };
+
+render();
+</script>
 </body>
 </html>
