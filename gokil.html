@@ -20,7 +20,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 
 header{
   display:flex;justify-content:space-between;align-items:center;background:var(--card);
-  padding:18px 24px;border-radius:20px;border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:20px;
+  padding:18px 24px;border-radius:20px;border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:20px;gap:12px;flex-wrap:wrap;
 }
 h1{margin:0;font-size:20px;font-weight:800;color:var(--acc)}
 h1 small{display:block;font-size:12px;color:var(--mute);font-weight:500}
@@ -71,6 +71,10 @@ th{background:var(--bg);color:var(--mute);font-size:12px;text-transform:uppercas
 .low-stock{background:rgba(239,68,68,0.03);border-left:4px solid var(--bad)}
 .prod-img-preview{width:45px;height:45px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#fff}
 .chart-container{width:100%;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:var(--shadow);margin-bottom:20px}
+.web-status-box{
+  margin-top:14px; padding:14px; border-radius:14px;
+  border:1px solid var(--line); background:var(--bg);
+}
 </style>
 </head>
 <body>
@@ -78,9 +82,10 @@ th{background:var(--bg);color:var(--mute);font-size:12px;text-transform:uppercas
   <header>
     <div>
       <h1>👑 Calaye Admin Pro</h1>
-      <small>🟢 Real-Time Cloud Sync Active</small>
+      <small>🟢 Real-Time Cloud Sync Active · <span id="web-state-label">Web Index: AKTIF</span></small>
     </div>
     <div class="row">
+      <button class="btn del sm" id="quick-web-btn" onclick="window.toggleWebIndex()">🔴 Matikan Web</button>
       <button class="btn warn sm" onclick="window.testBeep()">🔔 Tes Beep</button>
       <button class="btn ok sm" onclick="window.exportData()">📥 Backup JSON</button>
     </div>
@@ -146,9 +151,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const defaultMaintenance = {
+  active: false,
+  title: 'Web Sedang Ditutup Sementara',
+  message: 'Toko sedang dalam pemeliharaan oleh admin. Silakan kembali beberapa saat lagi.'
+};
+
 const seedData = {
   settings: { name: 'Calaye Store', wa: '6281234567890' },
   announcement: { text: '✨ Selamat datang di Calaye Store! Nikmati layanan instan & bergaransi.', active: true },
+  maintenance: { ...defaultMaintenance },
   coupons: [
     { code: 'CALAYE20', type: 'percent', val: 10 },
     { code: 'HEMAT5K', type: 'fixed', val: 5000 }
@@ -174,6 +186,21 @@ let isSyncing = false;
 let orderSearchQuery = '';
 let warrantySearchQuery = '';
 
+function syncWebSwitchUI() {
+  const isOff = Boolean(DB.maintenance && DB.maintenance.active);
+  const btn = document.getElementById('quick-web-btn');
+  const lbl = document.getElementById('web-state-label');
+  if (btn) {
+    btn.className = isOff ? 'btn ok sm' : 'btn del sm';
+    btn.textContent = isOff ? '🟢 Aktifkan Web' : '🔴 Matikan Web';
+  }
+  if (lbl) {
+    lbl.textContent = isOff ? 'Web Index: MATI (Maintenance)' : 'Web Index: AKTIF';
+    lbl.style.color = isOff ? 'var(--bad)' : 'var(--ok)';
+    lbl.style.fontWeight = '700';
+  }
+}
+
 // Sinkronisasi Data Konfigurasi Toko
 onSnapshot(doc(db, "store", "config"), (docSnap) => {
   if (isSyncing) return;
@@ -183,6 +210,8 @@ onSnapshot(doc(db, "store", "config"), (docSnap) => {
     if (data.coupons) DB.coupons = data.coupons;
     if (data.settings) DB.settings = data.settings;
     if (data.announcement) DB.announcement = data.announcement;
+    DB.maintenance = { ...defaultMaintenance, ...(data.maintenance || {}) };
+    syncWebSwitchUI();
     updateStats();
     renderTab();
   } else {
@@ -197,7 +226,8 @@ async function saveToCloud() {
       products: DB.products,
       coupons: DB.coupons,
       settings: DB.settings,
-      announcement: DB.announcement
+      announcement: DB.announcement,
+      maintenance: { ...defaultMaintenance, ...(DB.maintenance || {}) }
     });
     setTimeout(() => { isSyncing = false; }, 500);
   } catch(e) {
@@ -207,10 +237,18 @@ async function saveToCloud() {
 }
 
 function save() {
+  syncWebSwitchUI();
   saveToCloud();
   updateStats();
   renderTab();
 }
+
+window.toggleWebIndex = function() {
+  DB.maintenance = { ...defaultMaintenance, ...(DB.maintenance || {}) };
+  DB.maintenance.active = !DB.maintenance.active;
+  save();
+  showToast(DB.maintenance.active ? '🔴 Web index berhasil dimatikan!' : '🟢 Web index berhasil diaktifkan kembali!');
+};
 
 function rp(n) { return 'Rp' + Number(n || 0).toLocaleString('id-ID'); }
 
@@ -289,7 +327,7 @@ onSnapshot(collection(db, "warranties"), (snapshot) => {
 function updateStats() {
   const completed = liveOrders.filter(o => o.status === 'SUCCESS' || o.status === 'Selesai');
   const rev = completed.reduce((a, b) => a + (b.price || b.total || 0), 0);
-  
+
   let profit = 0;
   completed.forEach(o => {
     (o.items || []).forEach(item => {
@@ -387,8 +425,8 @@ function renderTab() {
 }
 
 function renderOrders(el) {
-  const filteredOrders = liveOrders.filter(o => 
-    (o.code || '').toLowerCase().includes(orderSearchQuery.toLowerCase()) || 
+  const filteredOrders = liveOrders.filter(o =>
+    (o.code || '').toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
     (o.buyerName || o.name || '').toLowerCase().includes(orderSearchQuery.toLowerCase())
   );
 
@@ -488,8 +526,8 @@ window.sendWA = function(wa, code, status) {
 
 /* --- TAB BARU: REKAPAN GARANSI --- */
 function renderWarranty(el) {
-  const filteredWarranties = liveWarranties.filter(w => 
-    (w.code || '').toLowerCase().includes(warrantySearchQuery.toLowerCase()) || 
+  const filteredWarranties = liveWarranties.filter(w =>
+    (w.code || '').toLowerCase().includes(warrantySearchQuery.toLowerCase()) ||
     (w.customerName || '').toLowerCase().includes(warrantySearchQuery.toLowerCase()) ||
     (w.accountDetail || '').toLowerCase().includes(warrantySearchQuery.toLowerCase())
   );
@@ -576,7 +614,7 @@ window.openAddWarrantyModal = async function() {
   const customerPhone = prompt("Nomor WhatsApp Customer (cth: 08123...):");
   const buyDate = prompt("Tanggal Pembelian (cth: 01 Nov 2026):");
   const accountDetail = prompt("Detail Akun Bermasalah (Email / Username / Keterangan):");
-  
+
   if (!customerName || !accountDetail) return alert("Nama dan Detail akun wajib diisi!");
 
   try {
@@ -616,12 +654,10 @@ window.exportToSpreadsheet = function(type) {
   }
 
   const tsvContent = header + rows.join('\n');
-  
-  // Salin otomatis ke clipboard agar bisa langsung di-Paste (Ctrl+V) ke Google Sheets / Excel
+
   navigator.clipboard.writeText(tsvContent).then(() => {
     showToast('📊 Berhasil disalin! Buka Google Spreadsheet, klik cell A1, lalu tekan Ctrl+V.');
   }).catch(err => {
-    // Fallback download file CSV jika clipboard diblokir browser
     const blob = new Blob([tsvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -652,7 +688,7 @@ function renderProducts(el) {
         <div style="margin-bottom:10px;">
           <input style="width:100%; font-size:12px;" placeholder="Link URL Gambar / Foto (contoh: https://i.imgur.com/xxx.png)" value="${esc(p.img || '')}" onchange="window.updProd(${pi},'img',this.value)">
         </div>
-        
+
         <div style="margin-bottom:12px;">
           <label style="font-size:11px; font-weight:700; color:var(--mute); display:block; margin-bottom:4px;">Deskripsi Singkat (Tampil otomatis di web pembeli):</label>
           <textarea rows="2" style="width:100%; font-size:12px;" placeholder="Tulis deskripsi produk..." onchange="window.updProd(${pi},'desc',this.value)">${esc(p.desc || '')}</textarea>
@@ -750,7 +786,7 @@ function renderAnnouncement(el) {
     <div class="card" style="max-width:600px">
       <h3>📢 Banner & Pengumuman Website Pembeli</h3>
       <p style="color:var(--mute); font-size:12px; margin-top:4px;">Pesan pengumuman ini akan langsung muncul di bagian atas halaman pembeli secara real-time.</p>
-      
+
       <div class="sp">
         <label style="font-size:12px; font-weight:700; color:var(--mute); display:block; margin-bottom:6px;">Isi Teks Pengumuman:</label>
         <textarea id="ann-text" rows="4" style="width:100%; resize:vertical;" placeholder="Contoh: ✨ Promo Diskon Spesial Hari Ini!">${esc(ann.text)}</textarea>
@@ -777,23 +813,55 @@ window.saveAnnouncement = () => {
 
 /* --- TAB 6: PENGATURAN --- */
 function renderSettings(el) {
+  const m = { ...defaultMaintenance, ...(DB.maintenance || {}) };
   el.innerHTML = `
-    <div class="card" style="max-width:500px">
+    <div class="card" style="max-width:560px">
       <h3>Pengaturan Toko</h3>
       <label style="font-size:12px;color:var(--mute)">Nama Toko</label>
-      <input class="sp" id="s-name" value="${DB.settings.name}" style="width:100%">
-      
+      <input class="sp" id="s-name" value="${esc(DB.settings.name)}" style="width:100%">
+
       <label style="font-size:12px;color:var(--mute);display:block;margin-top:10px">Nomor WhatsApp Admin (Format: 628...)</label>
-      <input class="sp" id="s-wa" value="${DB.settings.wa}" style="width:100%">
-      
+      <input class="sp" id="s-wa" value="${esc(DB.settings.wa)}" style="width:100%">
+
+      <div class="web-status-box">
+        <div class="row">
+          <div>
+            <b style="font-size:13px;">🛑 Kontrol Matikan / Nyalakan Web Index</b>
+            <div style="font-size:11px;color:var(--mute)">Jika aktif, halaman pembeli otomatis tampil layar tutup/maintenance.</div>
+          </div>
+          <span class="badge ${m.active ? 'Dibatalkan' : 'Selesai'}">${m.active ? 'MATI' : 'AKTIF'}</span>
+        </div>
+
+        <label style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer;">
+          <input type="checkbox" id="m-active" ${m.active ? 'checked' : ''} style="width:18px;height:18px;">
+          Matikan Web Index (Mode Maintenance)
+        </label>
+
+        <label style="font-size:12px;color:var(--mute);display:block;margin-top:10px">Judul Layar Maintenance</label>
+        <input style="width:100%;margin-top:4px" id="m-title" value="${esc(m.title)}">
+
+        <label style="font-size:12px;color:var(--mute);display:block;margin-top:10px">Pesan untuk Pembeli</label>
+        <textarea rows="2" style="width:100%;margin-top:4px" id="m-msg">${esc(m.message)}</textarea>
+      </div>
+
       <button class="btn ok sp" style="width:100%" onclick="window.saveSet()">Simpan Pengaturan</button>
     </div>`;
 }
 window.saveSet = () => {
   DB.settings.name = document.getElementById('s-name').value.trim();
   DB.settings.wa = document.getElementById('s-wa').value.replace(/\D/g, '');
+  const mActiveEl = document.getElementById('m-active');
+  const mTitleEl = document.getElementById('m-title');
+  const mMsgEl = document.getElementById('m-msg');
+  if (mActiveEl && mTitleEl && mMsgEl) {
+    DB.maintenance = {
+      active: mActiveEl.checked,
+      title: mTitleEl.value.trim() || defaultMaintenance.title,
+      message: mMsgEl.value.trim() || defaultMaintenance.message
+    };
+  }
   save();
-  showToast('Pengaturan toko berhasil disimpan!');
+  showToast('Pengaturan toko & status web berhasil disimpan!');
 };
 
 window.exportData = () => {
